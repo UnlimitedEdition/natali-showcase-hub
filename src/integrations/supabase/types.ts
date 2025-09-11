@@ -14,13 +14,204 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      content: {
+        Row: {
+          content_html: string | null
+          content_text: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          language_code: string
+          media_type: string | null
+          media_url: string | null
+          page_key: string
+          section_key: string
+          updated_at: string
+        }
+        Insert: {
+          content_html?: string | null
+          content_text?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          language_code?: string
+          media_type?: string | null
+          media_url?: string | null
+          page_key: string
+          section_key: string
+          updated_at?: string
+        }
+        Update: {
+          content_html?: string | null
+          content_text?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          language_code?: string
+          media_type?: string | null
+          media_url?: string | null
+          page_key?: string
+          section_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      episodes: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          episode_number: number | null
+          id: string
+          is_featured: boolean
+          is_published: boolean
+          language_code: string
+          published_date: string | null
+          season_number: number | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          language_code?: string
+          published_date?: string | null
+          season_number?: number | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          episode_number?: number | null
+          id?: string
+          is_featured?: boolean
+          is_published?: boolean
+          language_code?: string
+          published_date?: string | null
+          season_number?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
+      gdpr_consents: {
+        Row: {
+          consent_given: boolean
+          consent_type: string
+          created_at: string
+          id: string
+          language_code: string
+          user_identifier: string
+        }
+        Insert: {
+          consent_given: boolean
+          consent_type: string
+          created_at?: string
+          id?: string
+          language_code?: string
+          user_identifier: string
+        }
+        Update: {
+          consent_given?: boolean
+          consent_type?: string
+          created_at?: string
+          id?: string
+          language_code?: string
+          user_identifier?: string
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          language_preference: string
+          name: string | null
+        }
+        Insert: {
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          language_preference?: string
+          name?: string | null
+        }
+        Update: {
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          language_preference?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
