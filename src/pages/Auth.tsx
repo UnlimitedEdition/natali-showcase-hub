@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react'; // Added eye icons for password visibility toggle
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
+  const [showPassword, setShowPassword] = useState(false); // Added state for password visibility toggle
 
   // Form states
   const [email, setEmail] = useState('');
@@ -36,20 +38,20 @@ export default function Auth() {
       
       if (error) {
         toast({
-          title: "Error",
+          title: t('auth.error'),
           description: error.message,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Success",
-          description: "Welcome back!",
+          title: t('auth.success'),
+          description: t('auth.welcomeBack'),
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: t('auth.error'),
+        description: t('auth.unexpectedError'),
         variant: "destructive"
       });
     } finally {
@@ -62,8 +64,8 @@ export default function Auth() {
     
     if (password !== confirmPassword) {
       toast({
-        title: "Error",
-        description: "Passwords don't match",
+        title: t('auth.error'),
+        description: t('auth.passwordMismatch'),
         variant: "destructive"
       });
       return;
@@ -71,8 +73,8 @@ export default function Auth() {
 
     if (password.length < 6) {
       toast({
-        title: "Error",
-        description: "Password must be at least 6 characters",
+        title: t('auth.error'),
+        description: t('auth.passwordLength'),
         variant: "destructive"
       });
       return;
@@ -85,21 +87,21 @@ export default function Auth() {
       
       if (error) {
         toast({
-          title: "Error",
+          title: t('auth.error'),
           description: error.message,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Success",
-          description: "Account created! Please check your email to verify your account.",
+          title: t('auth.success'),
+          description: t('auth.accountCreated'),
         });
         setActiveTab('signin');
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: t('auth.error'),
+        description: t('auth.unexpectedError'),
         variant: "destructive"
       });
     } finally {
@@ -112,10 +114,10 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-2xl border-primary/20">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Natali Show
+            Natalia Show
           </CardTitle>
           <CardDescription>
-            Access your admin panel
+            {t('auth.accessAdmin')}
           </CardDescription>
         </CardHeader>
 
@@ -128,18 +130,18 @@ export default function Auth() {
               </TabsTrigger>
               <TabsTrigger value="signup" className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4" />
-                Sign Up
+                {t('auth.signup')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="space-y-4 mt-6">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('auth.email')}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@natalishow.com"
+                    placeholder="admin@Nataliashow.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -148,15 +150,24 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
+                  <Label htmlFor="password">{t('auth.password')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <Button 
@@ -167,7 +178,7 @@ export default function Auth() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      {t('auth.signingIn')}
                     </>
                   ) : (
                     <>
@@ -182,11 +193,11 @@ export default function Auth() {
             <TabsContent value="signup" className="space-y-4 mt-6">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">{t('auth.fullName')}</Label>
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Natali Admin"
+                    placeholder={t('auth.fullNamePlaceholder')}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -195,11 +206,11 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">{t('auth.email')}</Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="admin@natalishow.com"
+                    placeholder="admin@Nataliashow.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -208,20 +219,29 @@ export default function Auth() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading}
-                    minLength={6}
-                  />
+                  <Label htmlFor="signup-password">{t('auth.password')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Label htmlFor="confirm-password">{t('auth.confirmPassword')}</Label>
                   <Input
                     id="confirm-password"
                     type="password"
@@ -240,12 +260,12 @@ export default function Auth() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
+                      {t('auth.creatingAccount')}
                     </>
                   ) : (
                     <>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Create Account
+                      {t('auth.createAccount')}
                     </>
                   )}
                 </Button>

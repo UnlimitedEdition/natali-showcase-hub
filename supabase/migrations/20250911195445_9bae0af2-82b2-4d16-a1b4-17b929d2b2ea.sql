@@ -144,7 +144,7 @@ BEGIN
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
     CASE 
-      WHEN NEW.email = 'admin@natalishow.com' THEN 'admin'
+      WHEN NEW.email = 'admin@Nataliashow.com' THEN 'admin'
       ELSE 'viewer'
     END
   );
@@ -182,25 +182,25 @@ CREATE TRIGGER update_episodes_updated_at
 -- Insert initial admin user content and sample data
 INSERT INTO public.content (page_key, section_key, language_code, content_text) VALUES
 -- Serbian content
-('home', 'hero_title', 'sr', 'Dobrodošli na Natali Show'),
+('home', 'hero_title', 'sr', 'Dobrodošli na Natalia Show'),
 ('home', 'hero_subtitle', 'sr', 'Prefinjen podcast o životu, kuvanju i pričama koje inspirišu'),
 ('podcast', 'page_title', 'sr', 'Podcast Epizode'),
-('kitchen', 'page_title', 'sr', 'Natali u Kuhinji'),
+('kitchen', 'page_title', 'sr', 'Natalia u Kuhinji'),
 ('stories', 'page_title', 'sr', 'Priče'),
 ('contact', 'page_title', 'sr', 'Kontakt'),
 
 -- German content
-('home', 'hero_title', 'de', 'Willkommen bei der Natali Show'),
+('home', 'hero_title', 'de', 'Willkommen bei der Natalia Show'),
 ('home', 'hero_subtitle', 'de', 'Ein eleganter Podcast über Leben, Kochen und inspirierende Geschichten'),
 ('podcast', 'page_title', 'de', 'Podcast Episoden'),
-('kitchen', 'page_title', 'de', 'Natali in der Küche'),
+('kitchen', 'page_title', 'de', 'Natalia in der Küche'),
 ('stories', 'page_title', 'de', 'Geschichten'),
 ('contact', 'page_title', 'de', 'Kontakt'),
 
 -- English content
-('home', 'hero_title', 'en', 'Welcome to Natali Show'),
+('home', 'hero_title', 'en', 'Welcome to Natalia Show'),
 ('home', 'hero_subtitle', 'en', 'An elegant podcast about life, cooking and inspiring stories'),
 ('podcast', 'page_title', 'en', 'Podcast Episodes'),
-('kitchen', 'page_title', 'en', 'Natali in the Kitchen'),
+('kitchen', 'page_title', 'en', 'Natalia in the Kitchen'),
 ('stories', 'page_title', 'en', 'Stories'),
 ('contact', 'page_title', 'en', 'Contact');

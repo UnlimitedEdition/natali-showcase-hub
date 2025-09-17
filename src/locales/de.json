@@ -1,0 +1,227 @@
+{
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "warning": "Warnung"
+  },
+  "navigation": {
+    "home": "Startseite",
+    "podcast": "Podcast",
+    "kitchen": "Küche",
+    "stories": "Geschichten",
+    "contact": "Kontakt"
+  },
+  "nav": {
+    "home": "Startseite",
+    "podcast": "Podcast",
+    "kitchen": "Küche",
+    "stories": "Geschichten",
+    "contact": "Kontakt"
+  },
+  "home": {
+    "title": "Willkommen bei der Natali Show",
+    "subtitle": "Ein eleganter Podcast über Leben, Kochen und inspirierende Geschichten",
+    "latestEpisode": "Neueste Folge",
+    "hero": {
+      "title": "Willkommen bei der Natali Show",
+      "subtitle": "Ein eleganter Podcast über Leben, Kochen und inspirierende Geschichten",
+      "listen": "Jetzt anhören",
+      "book": "Beratung buchen"
+    }
+  },
+  "podcast": {
+    "title": "Podcast Episoden",
+    "subtitle": "Hören Sie sich unsere neuesten Episoden an",
+    "searchPlaceholder": "Episoden suchen...",
+    "filter": "Filter",
+    "categories": {
+      "all": "Alle Kategorien",
+      "kitchen": "Küche",
+      "stories": "Geschichten",
+      "lifestyle": "Lebensstil",
+      "interview": "Interview",
+      "travel": "Reisen"
+    },
+    "noEpisodes": "Keine Episoden gefunden",
+    "noEpisodesDescription": "Derzeit sind keine Episoden verfügbar. Schauen Sie später noch einmal vorbei!",
+    "watchNow": "Jetzt ansehen",
+    "hero": {
+      "title": "Podcast",
+      "subtitle": "Hören Sie sich unsere neuesten Episoden an"
+    }
+  },
+  "kitchen": {
+    "title": "Küche",
+    "subtitle": "Köstliche Rezepte und Kochtipps",
+    "searchPlaceholder": "Rezepte suchen...",
+    "watchVideo": "Video ansehen",
+    "videoThumbnail": "Video-Vorschaubild",
+    "contentImage": "Inhaltsbild",
+    "watchEpisode": "Episode ansehen",
+    "episodeThumbnail": "Episoden-Vorschaubild",
+    "watchRecipe": "Rezept ansehen",
+    "recipeThumbnail": "Rezept-Vorschaubild",
+    "recipeImage": "Rezeptbild",
+    "hero": {
+      "title": "Küche",
+      "subtitle": "Köstliche Rezepte und Kochtipps"
+    },
+    "about": {
+      "title": "Über die Küche"
+    },
+    "episodes": {
+      "title": "Kochepisoden"
+    },
+    "recipes": {
+      "title": "Rezepte"
+    }
+  },
+  "stories": {
+    "title": "Geschichten",
+    "subtitle": "Inspirierende Geschichten und Lebenserfahrungen",
+    "searchPlaceholder": "Geschichten suchen...",
+    "watchVideo": "Video ansehen",
+    "videoThumbnail": "Video-Vorschaubild",
+    "contentImage": "Inhaltsbild",
+    "watchStory": "Geschichte ansehen",
+    "storyThumbnail": "Geschichten-Vorschaubild",
+    "storyImage": "Geschichtenbild",
+    "hero": {
+      "title": "Geschichten",
+      "subtitle": "Inspirierende Geschichten und Lebenserfahrungen"
+    },
+    "about": {
+      "title": "Über die Geschichten"
+    },
+    "stories": {
+      "title": "Geschichten"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "Kontaktieren Sie uns",
+      "subtitle": "Wir freuen uns darauf, von Ihnen zu hören. Senden Sie uns eine Nachricht und wir werden uns so schnell wie möglich bei Ihnen melden."
+    },
+    "email": {
+      "title": "E-Mail",
+      "description": "Für allgemeine Anfragen"
+    },
+    "phone": {
+      "title": "Telefon",
+      "description": "Montag bis Freitag, 9-17 Uhr"
+    },
+    "address": {
+      "title": "Adresse",
+      "description": "Unsere Studio-Adresse"
+    },
+    "hours": {
+      "title": "Öffnungszeiten",
+      "description": "Montag bis Freitag"
+    },
+    "form": {
+      "title": "Senden Sie uns eine Nachricht",
+      "subtitle": "Füllen Sie das untenstehende Formular aus und wir werden uns so schnell wie möglich bei Ihnen melden.",
+      "firstName": "Vorname",
+      "firstNamePlaceholder": "Geben Sie Ihren Vornamen ein",
+      "lastName": "Nachname",
+      "lastNamePlaceholder": "Geben Sie Ihren Nachnamen ein",
+      "phone": "Telefonnummer",
+      "reason": "Grund für die Kontaktaufnahme",
+      "message": "Ihre Nachricht",
+      "messagePlaceholder": "Erzählen Sie uns mehr über Ihre Anfrage...",
+      "submit": "Nachricht senden",
+      "submitting": "Senden...",
+      "success": "Nachricht erfolgreich gesendet! Wir melden uns bald bei Ihnen.",
+      "error": "Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+      "reasonOptions": {
+        "guest": "Als Gast buchen",
+        "media": "Medienanfrage",
+        "cooking": "Koch-Samarbeitung",
+        "support": "Technischer Support",
+        "other": "Andere"
+      }
+    },
+    "reasons": {
+      "title": "Warum uns kontaktieren?",
+      "guest": {
+        "title": "Als Gast buchen",
+        "description": "Interessiert daran, Gast in unserer Sendung zu sein? Wir freuen uns darauf, von Ihnen zu hören!"
+      },
+      "media": {
+        "title": "Medienanfrage",
+        "description": "Für presse- und medienbezogene Fragen"
+      },
+      "cooking": {
+        "title": "Koch-Samarbeitung",
+        "description": "Arbeiten Sie mit uns an Kochprojekten zusammen"
+      },
+      "support": {
+        "title": "Technischer Support",
+        "description": "Probleme mit unserer Website oder Inhalten?"
+      }
+    },
+    "map": {
+      "title": "Besuchen Sie unser Studio",
+      "description": "Kommen Sie uns in unserem schönen Studio im Herzen Belgrads besuchen.",
+      "button": "Wegbeschreibung"
+    },
+    "faq": {
+      "title": "Häufig gestellte Fragen",
+      "subtitle": "Finden Sie Antworten auf häufige Fragen zu unserem Podcast und unseren Dienstleistungen.",
+      "questions": {
+        "guest": {
+          "question": "Wie kann ich Gast in Ihrer Sendung werden?",
+          "answer": "Füllen Sie einfach das Kontaktformular mit 'Als Gast buchen' als Grund aus, und wir melden uns mit weiteren Informationen."
+        },
+        "response": {
+          "question": "Wie lange dauert es, eine Antwort zu erhalten?",
+          "answer": "Wir antworten normalerweise innerhalb von 24-48 Stunden auf alle Anfragen an Werktagen."
+        },
+        "recipe": {
+          "question": "Kann ich meine eigenen Rezepte einreichen?",
+          "answer": "Ja! Wir interessieren uns immer für neue Rezepte. Bitte kontaktieren Sie uns über das Formular mit 'Koch-Samarbeitung' als Grund."
+        },
+        "consulting": {
+          "question": "Bieten Sie Kochberatungen an?",
+          "answer": "Ja, wir bieten personalisierte Kochberatungen an. Wählen Sie 'Koch-Samarbeitung', wenn Sie uns kontaktieren, für weitere Informationen."
+        }
+      }
+    }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "description": "Verwalten Sie Ihre Inhalte, Episoden, Benutzer und Einstellungen",
+    "content": "Inhalt",
+    "episodes": "Episoden",
+    "users": "Benutzer",
+    "database": "Datenbank",
+    "settings": "Einstellungen",
+    "panel": {
+      "contentManagement": "Inhaltsverwaltung",
+      "episodesManagement": "Episodenverwaltung",
+      "siteSettings": "Seiteneinstellungen"
+    },
+    "users": {
+      "title": "Benutzerverwaltung",
+      "guestRequests": "Gastanfragen",
+      "totalRequests": "Gesamtanfragen",
+      "noGuestRequests": "Noch keine Gastanfragen",
+      "reason": "Grund",
+      "message": "Nachricht",
+      "phone": "Telefon"
+    },
+    "errors": {
+      "fetchFailed": "Daten konnten nicht abgerufen werden",
+      "guestRequestsFetchFailed": "Gastanfragen konnten nicht abgerufen werden",
+      "updateFailed": "Element konnte nicht aktualisiert werden",
+      "deleteFailed": "Element konnte nicht gelöscht werden",
+      "publishToggleFailed": "Veröffentlichungsstatus konnte nicht geändert werden"
+    }
+  }
+}

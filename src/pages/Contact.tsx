@@ -1,61 +1,224 @@
-import { Mail, Phone, MapPin, Clock, Send, MessageCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Mic } from 'lucide-react';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+
+interface ContentItem {
+  id: string;
+  page_key: string;
+  section_key: string;
+  language_code: string;
+  content_text: string | null;
+  content_html: string | null;
+  media_url: string | null;
+  media_type: string | null;
+  is_published: boolean;
+}
+
+interface GuestRequest {
+  id?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  reason: string;
+  message: string;
+  language_code: string;
+  created_at?: string;
+}
 
 const Contact = () => {
+  const { t, language } = useLanguage();
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState<GuestRequest>({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    reason: t('contact.form.reasonOptions.guest'),
+    message: '',
+    language_code: language
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchContent();
+  }, [language]);
+
+  const fetchContent = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .eq('page_key', 'contact')
+        .eq('language_code', language)
+        .eq('is_published', true);
+
+      if (error) throw error;
+      setContent(data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      setLoading(false);
+    }
+  };
+
+  const getContentBySection = (sectionKey: string) => {
+    const item = content.find(item => item.section_key === sectionKey);
+    return item ? item.content_text : null;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleReasonSelect = (reasonValue: string) => {
+    setFormData(prev => ({
+      ...prev,
+      reason: reasonValue
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase
+        .from('guest_requests')
+        .insert([
+          {
+            ...formData,
+            language_code: language
+          }
+        ]);
+
+      if (error) throw error;
+      
+      toast.success(t('contact.form.success'));
+      
+      // Reset form
+      setFormData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        reason: t('contact.form.reasonOptions.guest'),
+        message: '',
+        language_code: language
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error(t('contact.form.error'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const contactInfo = [
     {
       icon: Mail,
-      title: "Email Adresa",
-      info: "hello@natalishow.rs",
-      description: "Pošaljite nam poruku, odgovorićemo u roku od 24 sata"
+      title: t('contact.email.title'),
+      info: "hello@Nataliashow.rs",
+      description: t('contact.email.description')
     },
     {
       icon: Phone,
-      title: "Telefon",
+      title: t('contact.phone.title'),
       info: "+381 11 123 4567",
-      description: "Pozovite nas radnim danima od 9:00 do 17:00"
+      description: t('contact.phone.description')
     },
     {
       icon: MapPin,
-      title: "Adresa",
+      title: t('contact.address.title'),
       info: "Knez Mihailova 42, Beograd",
-      description: "Možete nas posjetiti u našem studiju"
+      description: t('contact.address.description')
     },
     {
       icon: Clock,
-      title: "Radno Vrijeme",
+      title: t('contact.hours.title'),
       info: "Pon-Pet: 9:00-17:00",
-      description: "Vikendima po dogovoru"
+      description: t('contact.hours.description')
     }
   ];
 
   const reasons = [
     {
-      title: "Budite Gost Podkasta",
-      description: "Imate inspirativnu priču? Želimo je čuti!",
-      icon: "🎙️"
+      title: t('contact.reasons.guest.title'),
+      description: t('contact.reasons.guest.description'),
+      icon: "🎙️",
+      value: t('contact.form.reasonOptions.guest')
     },
     {
-      title: "Medijska Saradnja",
-      description: "Partnerin za intervjue, gostovanja i saradnju",
-      icon: "📺"
+      title: t('contact.reasons.media.title'),
+      description: t('contact.reasons.media.description'),
+      icon: "📺",
+      value: t('contact.form.reasonOptions.media')
     },
     {
-      title: "Kulinarska Savjetovanja",
-      description: "Potreban vam je savjet za vaš recept?",
-      icon: "👩‍🍳"
+      title: t('contact.reasons.cooking.title'),
+      description: t('contact.reasons.cooking.description'),
+      icon: "👩‍🍳",
+      value: t('contact.form.reasonOptions.cooking')
     },
     {
-      title: "Tehnička Podrška",
-      description: "Problemi sa pristupom sadržaju ili stranici",
-      icon: "🔧"
+      title: t('contact.reasons.support.title'),
+      description: t('contact.reasons.support.description'),
+      icon: "🔧",
+      value: t('contact.form.reasonOptions.support')
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto text-center">
+            <div className="animate-pulse h-16 bg-gray-200 rounded w-64 mx-auto mb-6"></div>
+            <div className="animate-pulse h-6 bg-gray-200 rounded w-96 mx-auto"></div>
+          </div>
+        </div>
+        <div className="py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const pageTitle = getContentBySection('page_title') || t('contact.hero.title');
+  const pageSubtitle = getContentBySection('page_subtitle') || t('contact.hero.subtitle');
+  const heroTitle = getContentBySection('hero_title') || t('contact.hero.title');
+  const heroSubtitle = getContentBySection('hero_subtitle') || t('contact.hero.subtitle');
 
   return (
     <div className="min-h-screen">
@@ -64,11 +227,18 @@ const Contact = () => {
       {/* Header */}
       <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-hero">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-accent bg-clip-text text-transparent">
-            Kontaktirajte Nas
-          </h1>
+          <div className="flex justify-center items-center mb-6">
+            <img 
+              src="/logo.png" 
+              alt="Natalia Show Logo" 
+              className="w-16 h-16 rounded-full object-contain mr-4"
+            />
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+              {heroTitle}
+            </h1>
+          </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Uvijek smo tu za vas! Bilo da želite biti gost, imate pitanje ili jednostavno želite reći zdravo.
+            {heroSubtitle}
           </p>
         </div>
       </section>
@@ -103,56 +273,98 @@ const Contact = () => {
             {/* Contact Form */}
             <div className="space-y-8">
               <div>
-                <h2 className="text-3xl font-bold mb-4">Pošaljite Poruku</h2>
+                <h2 className="text-3xl font-bold mb-4">{t('contact.form.title')}</h2>
                 <p className="text-muted-foreground">
-                  Popunite formu ispod i kontaktiraćemo vas što prije.
+                  {t('contact.form.subtitle')}
                 </p>
               </div>
               
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Ime</label>
-                    <Input placeholder="Vaše ime" />
+                    <label className="block text-sm font-medium mb-2">{t('contact.form.firstName')}</label>
+                    <Input 
+                      name="first_name"
+                      value={formData.first_name}
+                      onChange={handleInputChange}
+                      placeholder={t('contact.form.firstNamePlaceholder')} 
+                      required
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Prezime</label>
-                    <Input placeholder="Vaše prezime" />
+                    <label className="block text-sm font-medium mb-2">{t('contact.form.lastName')}</label>
+                    <Input 
+                      name="last_name"
+                      value={formData.last_name}
+                      onChange={handleInputChange}
+                      placeholder={t('contact.form.lastNamePlaceholder')} 
+                      required
+                    />
                   </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium mb-2">Email</label>
-                  <Input type="email" placeholder="vas.email@example.com" />
+                  <Input 
+                    name="email"
+                    type="email" 
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="vas.email@example.com" 
+                    required
+                  />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Telefon (opcionalno)</label>
-                  <Input placeholder="+381 XX XXX XXXX" />
+                  <label className="block text-sm font-medium mb-2">{t('contact.form.phone')}</label>
+                  <Input 
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="+381 XX XXX XXXX" 
+                  />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Razlog kontakta</label>
-                  <select className="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-                    <option>Želim biti gost podkasta</option>
-                    <option>Medijska saradnja</option>
-                    <option>Kulinarski savjeti</option>
-                    <option>Tehnička podrška</option>
-                    <option>Ostalo</option>
+                  <label className="block text-sm font-medium mb-2">{t('contact.form.reason')}</label>
+                  <select 
+                    name="reason"
+                    value={formData.reason}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value={t('contact.form.reasonOptions.guest')}>{t('contact.form.reasonOptions.guest')}</option>
+                    <option value={t('contact.form.reasonOptions.media')}>{t('contact.form.reasonOptions.media')}</option>
+                    <option value={t('contact.form.reasonOptions.cooking')}>{t('contact.form.reasonOptions.cooking')}</option>
+                    <option value={t('contact.form.reasonOptions.support')}>{t('contact.form.reasonOptions.support')}</option>
+                    <option value={t('contact.form.reasonOptions.other')}>{t('contact.form.reasonOptions.other')}</option>
                   </select>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Poruka</label>
+                  <label className="block text-sm font-medium mb-2">{t('contact.form.message')}</label>
                   <Textarea 
-                    placeholder="Opišite detaljno razlog vašeg kontakta..."
+                    name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    placeholder={t('contact.form.messagePlaceholder')}
                     rows={6}
+                    required
                   />
                 </div>
                 
-                <Button variant="hero" size="lg" className="w-full">
-                  <Send className="w-5 h-5 mr-2" />
-                  Pošalji Poruku
+                <Button variant="hero" size="lg" className="w-full" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                      {t('contact.form.submitting')}
+                    </span>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5 mr-2" />
+                      {t('contact.form.submit')}
+                    </>
+                  )}
                 </Button>
               </form>
             </div>
@@ -160,10 +372,15 @@ const Contact = () => {
             {/* Reasons to Contact & Map */}
             <div className="space-y-8">
               <div>
-                <h2 className="text-3xl font-bold mb-4">Zašto Nas Kontaktirati?</h2>
+                <h2 className="text-3xl font-bold mb-4">{t('contact.reasons.title')}</h2>
                 <div className="space-y-4">
                   {reasons.map((reason, index) => (
-                    <div key={index} className="premium-card p-4 rounded-lg animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div 
+                      key={index} 
+                      className="premium-card p-4 rounded-lg animate-fade-in cursor-pointer hover:bg-primary/10 transition-colors"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                      onClick={() => handleReasonSelect(reason.value)}
+                    >
                       <div className="flex items-start space-x-4">
                         <div className="text-2xl">{reason.icon}</div>
                         <div>
@@ -179,12 +396,12 @@ const Contact = () => {
               {/* Map Placeholder */}
               <div className="premium-card p-8 rounded-xl text-center">
                 <MapPin className="w-16 h-16 text-primary-glow mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Naš Studio</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('contact.map.title')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  Nalazimo se u srcu Beograda, na Knez Mihailovoj ulici.
+                  {t('contact.map.description')}
                 </p>
                 <Button variant="outline">
-                  Otvori u Google Maps
+                  {t('contact.map.button')}
                 </Button>
               </div>
             </div>
@@ -197,30 +414,30 @@ const Contact = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Često Postavljena Pitanja
+              {t('contact.faq.title')}
             </h2>
             <p className="text-lg text-muted-foreground">
-              Odgovori na najčešća pitanja naših slušalaca.
+              {t('contact.faq.subtitle')}
             </p>
           </div>
 
           <div className="space-y-6">
             {[
               {
-                question: "Kako mogu biti gost u podkastu?",
-                answer: "Pošaljite nam poruku kroz kontakt formu sa kratkim opisom vaše priče ili ekspertize. Naš tim će vas kontaktirati ukoliko se vaš profil uklapa u naš sadržaj."
+                question: t('contact.faq.questions.guest.question'),
+                answer: t('contact.faq.questions.guest.answer')
               },
               {
-                question: "Da li odgovarate na sve poruke?",
-                answer: "Da! Trudimo se da odgovorimo na sve poruke u roku od 24-48 sati. Ukoliko ne čujete od nas, provjerite spam folder."
+                question: t('contact.faq.questions.response.question'),
+                answer: t('contact.faq.questions.response.answer')
               },
               {
-                question: "Mogu li poslati recept za objavljanje?",
-                answer: "Apsolutno! Volimo da dijelimo recepte naše zajednice. Pošaljite recept sa slikama i kratkom pričom o njemu."
+                question: t('contact.faq.questions.recipe.question'),
+                answer: t('contact.faq.questions.recipe.answer')
               },
               {
-                question: "Da li nudite privatne kulinarske savjete?",
-                answer: "Da, Natali nudi individualne konsultacije za posebne prilike. Kontaktirajte nas za više informacija o dostupnosti i cijenama."
+                question: t('contact.faq.questions.consulting.question'),
+                answer: t('contact.faq.questions.consulting.answer')
               }
             ].map((faq, index) => (
               <div key={index} className="premium-card p-6 rounded-lg animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>

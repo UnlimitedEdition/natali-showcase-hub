@@ -1,4 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import srTranslations from '@/locales/sr';
+import deTranslations from '@/locales/de';
+import enTranslations from '@/locales/en';
 
 export type Language = 'sr' | 'de' | 'en';
 
@@ -6,182 +10,38 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  translations: Record<string, string>;
+  loading: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Translation files
-const translations = {
-  sr: {
-    // Navigation
-    'nav.home': 'Početna',
-    'nav.podcast': 'Podcast',
-    'nav.kitchen': 'Kuhinja',
-    'nav.stories': 'Priče',
-    'nav.contact': 'Kontakt',
-    'nav.admin': 'Admin',
-    'nav.login': 'Prijava',
-    'nav.logout': 'Odjava',
-    
-    // Common
-    'common.loading': 'Učitava...',
-    'common.save': 'Sačuvaj',
-    'common.cancel': 'Otkaži',
-    'common.delete': 'Obriši',
-    'common.edit': 'Uredi',
-    'common.upload': 'Otpremi',
-    'common.close': 'Zatvori',
-    'common.yes': 'Da',
-    'common.no': 'Ne',
-    
-    // Home
-    'home.hero.title': 'Dobrodošli na Natali Show',
-    'home.hero.subtitle': 'Prefinjen podcast o životu, kuvanju i pričama koje inspirišu',
-    'home.newsletter.title': 'Pretplatite se na naš newsletter',
-    'home.newsletter.placeholder': 'Unesite vašu email adresu',
-    'home.newsletter.button': 'Pretplati se',
-    
-    // Admin
-    'admin.title': 'Admin Panel',
-    'admin.content': 'Upravljanje sadržajem',
-    'admin.episodes': 'Epizode',
-    'admin.users': 'Korisnici',
-    'admin.settings': 'Podešavanja',
-    'admin.upload.title': 'Otpremi medijum',
-    'admin.upload.image': 'Slika',
-    'admin.upload.video': 'Video URL',
-    'admin.upload.youtube': 'YouTube URL',
-    
-    // GDPR
-    'gdpr.title': 'Kolačići i privatnost',
-    'gdpr.message': 'Koristimo kolačiće da poboljšamo vaše iskustvo na našem sajtu.',
-    'gdpr.accept': 'Prihvati sve',
-    'gdpr.settings': 'Podešavanja',
-    'gdpr.necessary': 'Neophodni kolačići',
-    'gdpr.analytics': 'Analitički kolačići',
-    'gdpr.marketing': 'Marketing kolačići',
-    
-    // Privacy Policy
-    'privacy.title': 'Politika privatnosti',
-    'privacy.lastUpdated': 'Poslednje ažuriranje',
-    'terms.title': 'Uslovi korišćenja',
-  },
+// Translation files for fallback
+const localTranslations = {
+  sr: srTranslations,
+  de: deTranslations,
+  en: enTranslations
+};
+
+// Function to flatten nested objects
+const flattenObject = (obj: any, prefix = ''): Record<string, string> => {
+  const flattened: Record<string, string> = {};
   
-  de: {
-    // Navigation
-    'nav.home': 'Startseite',
-    'nav.podcast': 'Podcast',
-    'nav.kitchen': 'Küche',
-    'nav.stories': 'Geschichten',
-    'nav.contact': 'Kontakt',
-    'nav.admin': 'Admin',
-    'nav.login': 'Anmelden',
-    'nav.logout': 'Abmelden',
-    
-    // Common
-    'common.loading': 'Wird geladen...',
-    'common.save': 'Speichern',
-    'common.cancel': 'Abbrechen',
-    'common.delete': 'Löschen',
-    'common.edit': 'Bearbeiten',
-    'common.upload': 'Hochladen',
-    'common.close': 'Schließen',
-    'common.yes': 'Ja',
-    'common.no': 'Nein',
-    
-    // Home
-    'home.hero.title': 'Willkommen bei der Natali Show',
-    'home.hero.subtitle': 'Ein eleganter Podcast über Leben, Kochen und inspirierende Geschichten',
-    'home.newsletter.title': 'Abonnieren Sie unseren Newsletter',
-    'home.newsletter.placeholder': 'Geben Sie Ihre E-Mail-Adresse ein',
-    'home.newsletter.button': 'Abonnieren',
-    
-    // Admin
-    'admin.title': 'Admin Panel',
-    'admin.content': 'Inhaltsverwaltung',
-    'admin.episodes': 'Episoden',
-    'admin.users': 'Benutzer',
-    'admin.settings': 'Einstellungen',
-    'admin.upload.title': 'Medien hochladen',
-    'admin.upload.image': 'Bild',
-    'admin.upload.video': 'Video URL',
-    'admin.upload.youtube': 'YouTube URL',
-    
-    // GDPR
-    'gdpr.title': 'Cookies und Datenschutz',
-    'gdpr.message': 'Wir verwenden Cookies, um Ihre Erfahrung auf unserer Website zu verbessern.',
-    'gdpr.accept': 'Alle akzeptieren',
-    'gdpr.settings': 'Einstellungen',
-    'gdpr.necessary': 'Notwendige Cookies',
-    'gdpr.analytics': 'Analytische Cookies',
-    'gdpr.marketing': 'Marketing-Cookies',
-    
-    // Privacy Policy
-    'privacy.title': 'Datenschutzrichtlinie',
-    'privacy.lastUpdated': 'Zuletzt aktualisiert',
-    'terms.title': 'Nutzungsbedingungen',
-  },
-  
-  en: {
-    // Navigation
-    'nav.home': 'Home',
-    'nav.podcast': 'Podcast',
-    'nav.kitchen': 'Kitchen',
-    'nav.stories': 'Stories',
-    'nav.contact': 'Contact',
-    'nav.admin': 'Admin',
-    'nav.login': 'Login',
-    'nav.logout': 'Logout',
-    
-    // Common
-    'common.loading': 'Loading...',
-    'common.save': 'Save',
-    'common.cancel': 'Cancel',
-    'common.delete': 'Delete',
-    'common.edit': 'Edit',
-    'common.upload': 'Upload',
-    'common.close': 'Close',
-    'common.yes': 'Yes',
-    'common.no': 'No',
-    
-    // Home
-    'home.hero.title': 'Welcome to Natali Show',
-    'home.hero.subtitle': 'An elegant podcast about life, cooking and inspiring stories',
-    'home.newsletter.title': 'Subscribe to our newsletter',
-    'home.newsletter.placeholder': 'Enter your email address',
-    'home.newsletter.button': 'Subscribe',
-    
-    // Admin
-    'admin.title': 'Admin Panel',
-    'admin.content': 'Content Management',
-    'admin.episodes': 'Episodes',
-    'admin.users': 'Users',
-    'admin.settings': 'Settings',
-    'admin.upload.title': 'Upload Media',
-    'admin.upload.image': 'Image',
-    'admin.upload.video': 'Video URL',
-    'admin.upload.youtube': 'YouTube URL',
-    
-    // GDPR
-    'gdpr.title': 'Cookies and Privacy',
-    'gdpr.message': 'We use cookies to enhance your experience on our website.',
-    'gdpr.accept': 'Accept All',
-    'gdpr.settings': 'Settings',
-    'gdpr.necessary': 'Necessary Cookies',
-    'gdpr.analytics': 'Analytics Cookies',
-    'gdpr.marketing': 'Marketing Cookies',
-    
-    // Privacy Policy
-    'privacy.title': 'Privacy Policy',
-    'privacy.lastUpdated': 'Last updated',
-    'terms.title': 'Terms of Service',
+  for (const key in obj) {
+    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+      Object.assign(flattened, flattenObject(obj[key], prefix + key + '.'));
+    } else {
+      flattened[prefix + key] = obj[key];
+    }
   }
+  
+  return flattened;
 };
 
 // Function to detect language based on location/browser
 const detectLanguage = (): Language => {
   // Check localStorage first
-  const saved = localStorage.getItem('natali-show-language') as Language;
+  const saved = localStorage.getItem('Natalia-show-language') as Language;
   if (saved && ['sr', 'de', 'en'].includes(saved)) {
     return saved;
   }
@@ -198,19 +58,118 @@ const detectLanguage = (): Language => {
 };
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>(detectLanguage);
+  const [language, setLanguage] = useState<Language>(detectLanguage());
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('natali-show-language', language);
+    localStorage.setItem('Natalia-show-language', language);
     document.documentElement.lang = language;
   }, [language]);
 
+  // Load translations from database
+  useEffect(() => {
+    const loadTranslations = async () => {
+      console.log('DEBUG: Loading translations for language:', language);
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('translations')
+          .select('key, value')
+          .eq('language_code', language);
+
+        console.log('DEBUG: Supabase response - data length:', data ? data.length : 0, 'error:', error);
+
+        if (error) throw error;
+
+        const translationMap: Record<string, string> = {};
+        data.forEach(item => {
+          translationMap[item.key] = item.value;
+        });
+
+        console.log('DEBUG: Translation map created with', Object.keys(translationMap).length, 'entries');
+        setTranslations(translationMap);
+      } catch (error) {
+        console.error('DEBUG: Error loading translations from database:', error);
+        console.log('DEBUG: Falling back to local translations for', language);
+        // Fallback to local translations
+        const flattened = flattenObject(localTranslations[language]);
+        console.log('DEBUG: Local fallback has', Object.keys(flattened).length, 'entries');
+        setTranslations(flattened);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTranslations();
+    
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('translations')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'translations',
+          filter: `language_code=eq.${language}`
+        },
+        (payload) => {
+          setTranslations(prev => ({
+            ...prev,
+            [payload.new.key]: payload.new.value
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'translations',
+          filter: `language_code=eq.${language}`
+        },
+        (payload) => {
+          setTranslations(prev => ({
+            ...prev,
+            [payload.new.key]: payload.new.value
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'translations',
+          filter: `language_code=eq.${language}`
+        },
+        (payload) => {
+          setTranslations(prev => {
+            const newTranslations = { ...prev };
+            delete newTranslations[payload.old.key];
+            return newTranslations;
+          });
+        }
+      )
+      .subscribe();
+
+    // Clean up subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [language]);
+
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    const value = translations[key] || key;
+    if (value === key) {
+      console.log('DEBUG: Translation fallback to key:', key, 'for language:', language);
+    }
+    return value;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, translations, loading }}>
       {children}
     </LanguageContext.Provider>
   );

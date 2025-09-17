@@ -21,7 +21,7 @@ export const CookieBanner: React.FC = () => {
 
   useEffect(() => {
     // Check if user has already given consent
-    const consent = localStorage.getItem('natali-show-cookie-consent');
+    const consent = localStorage.getItem('Natalia-show-cookie-consent');
     if (!consent) {
       setShowBanner(true);
     } else {
@@ -33,7 +33,7 @@ export const CookieBanner: React.FC = () => {
   const saveConsent = async (consentData: typeof preferences) => {
     try {
       // Save to localStorage
-      localStorage.setItem('natali-show-cookie-consent', JSON.stringify(consentData));
+      localStorage.setItem('Natalia-show-cookie-consent', JSON.stringify(consentData));
       
       // Save to database for GDPR compliance
       const userIdentifier = localStorage.getItem('user-identifier') || 
@@ -87,6 +87,7 @@ export const CookieBanner: React.FC = () => {
     return null;
   }
 
+
   return (
     <>
       <Card className="fixed bottom-4 left-4 right-4 z-50 p-6 shadow-2xl border-primary/20 bg-background/95 backdrop-blur-sm max-w-md mx-auto lg:max-w-lg lg:left-6 lg:right-auto">
@@ -129,12 +130,18 @@ export const CookieBanner: React.FC = () => {
       </Card>
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="cookie-settings-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
               {t('gdpr.settings')}
             </DialogTitle>
+            <p id="cookie-settings-description" className="sr-only">
+              {t('gdpr.settings.description') || 
+               (language === 'sr' ? 'Podešavanja kolačića i politika privatnosti' :
+                language === 'de' ? 'Cookie-Einstellungen und Datenschutzrichtlinien' :
+                'Cookie settings and privacy policies')}
+            </p>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -145,7 +152,10 @@ export const CookieBanner: React.FC = () => {
                     {t('gdpr.necessary')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Required for basic website functionality
+                    {t('gdpr.necessary.description') || 
+                     (language === 'sr' ? 'Neophodni za osnovnu funkcionalnost sajta' :
+                      language === 'de' ? 'Erforderlich für die grundlegende Website-Funktionalität' :
+                      'Required for basic website functionality')}
                   </p>
                 </div>
                 <Switch 
@@ -161,7 +171,10 @@ export const CookieBanner: React.FC = () => {
                     {t('gdpr.analytics')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Help us improve our website
+                    {t('gdpr.analytics.description') || 
+                     (language === 'sr' ? 'Pomažu nam da poboljšamo naš sajt' :
+                      language === 'de' ? 'Helfen Sie uns, unsere Website zu verbessern' :
+                      'Help us improve our website')}
                   </p>
                 </div>
                 <Switch 
@@ -177,7 +190,10 @@ export const CookieBanner: React.FC = () => {
                     {t('gdpr.marketing')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Personalized ads and content
+                    {t('gdpr.marketing.description') || 
+                     (language === 'sr' ? 'Personalizovani oglasi i sadržaj' :
+                      language === 'de' ? 'Personalisierte Werbung und Inhalte' :
+                      'Personalized ads and content')}
                   </p>
                 </div>
                 <Switch 
@@ -190,10 +206,13 @@ export const CookieBanner: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-base font-medium">
-                    Preferences
+                    {t('gdpr.preferences')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Remember your settings
+                    {t('gdpr.preferences.description') || 
+                     (language === 'sr' ? 'Zapamtite vaša podešavanja' :
+                      language === 'de' ? 'Merken Sie sich Ihre Einstellungen' :
+                      'Remember your settings')}
                   </p>
                 </div>
                 <Switch 
@@ -206,10 +225,10 @@ export const CookieBanner: React.FC = () => {
 
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowSettings(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button onClick={savePreferences} className="bg-gradient-to-r from-primary to-accent">
-                Save Preferences
+                {t('common.save')}
               </Button>
             </div>
           </div>

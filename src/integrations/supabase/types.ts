@@ -1,17 +1,6 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
+export interface Database {
   public: {
     Tables: {
       content: {
@@ -34,7 +23,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_published?: boolean
-          language_code?: string
+          language_code: string
           media_type?: string | null
           media_url?: string | null
           page_key: string
@@ -59,6 +48,8 @@ export type Database = {
       episodes: {
         Row: {
           audio_url: string | null
+          author: string | null
+          category: string | null
           created_at: string
           description: string | null
           duration_seconds: number | null
@@ -67,7 +58,9 @@ export type Database = {
           is_featured: boolean
           is_published: boolean
           language_code: string
+          likes: number | null
           published_date: string | null
+          read_time: string | null
           season_number: number | null
           thumbnail_url: string | null
           title: string
@@ -77,15 +70,19 @@ export type Database = {
         }
         Insert: {
           audio_url?: string | null
+          author?: string | null
+          category?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
           episode_number?: number | null
-          id?: string
+          id: string
           is_featured?: boolean
           is_published?: boolean
-          language_code?: string
+          language_code: string
+          likes?: number | null
           published_date?: string | null
+          read_time?: string | null
           season_number?: number | null
           thumbnail_url?: string | null
           title: string
@@ -95,6 +92,8 @@ export type Database = {
         }
         Update: {
           audio_url?: string | null
+          author?: string | null
+          category?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
@@ -103,7 +102,9 @@ export type Database = {
           is_featured?: boolean
           is_published?: boolean
           language_code?: string
+          likes?: number | null
           published_date?: string | null
+          read_time?: string | null
           season_number?: number | null
           thumbnail_url?: string | null
           title?: string
@@ -115,232 +116,189 @@ export type Database = {
       }
       gdpr_consents: {
         Row: {
-          consent_given: boolean
-          consent_type: string
           created_at: string
           id: string
-          language_code: string
-          user_identifier: string
+          ip_address: string
+          user_agent: string | null
+          user_id: string | null
         }
         Insert: {
-          consent_given: boolean
-          consent_type: string
           created_at?: string
-          id?: string
-          language_code?: string
-          user_identifier: string
+          id: string
+          ip_address: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Update: {
-          consent_given?: boolean
-          consent_type?: string
           created_at?: string
           id?: string
-          language_code?: string
-          user_identifier?: string
+          ip_address?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gdpr_consents_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       newsletter_subscribers: {
         Row: {
           confirmed_at: string | null
-          created_at: string
           email: string
           id: string
-          is_active: boolean
-          language_preference: string
           name: string | null
+          status: string
+          subscribed_at: string
+          unsub_token: string
         }
         Insert: {
           confirmed_at?: string | null
-          created_at?: string
           email: string
-          id?: string
-          is_active?: boolean
-          language_preference?: string
+          id: string
           name?: string | null
+          status?: string
+          subscribed_at?: string
+          unsub_token?: string
         }
         Update: {
           confirmed_at?: string | null
-          created_at?: string
           email?: string
           id?: string
-          is_active?: boolean
-          language_preference?: string
           name?: string | null
+          status?: string
+          subscribed_at?: string
+          unsub_token?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
-          created_at: string
           email: string
           full_name: string | null
           id: string
           role: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
-          created_at?: string
           email: string
           full_name?: string | null
-          id?: string
-          role?: string
-          updated_at?: string
+          id: string
+          role: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           avatar_url?: string | null
-          created_at?: string
           email?: string
           full_name?: string | null
           id?: string
           role?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      guest_requests: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          language_code: string
+          last_name: string
+          message: string
+          phone: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id: string
+          language_code: string
+          last_name: string
+          message: string
+          phone?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          language_code?: string
+          last_name?: string
+          message?: string
+          phone?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          language_code: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          key: string
+          language_code: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          language_code?: string
+          updated_at?: string
+          value?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      [_ in never]: {
+        Row: {
+          [key: string]: unknown
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_admin: {
-        Args: { user_uuid: string }
+        Args: {
+          user_uuid: string
+        }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      [_ in never]: [string, ...string[]]
     }
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+      [_ in never]: {
+        [key: string]: unknown
       }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
     }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const

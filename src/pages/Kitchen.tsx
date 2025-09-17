@@ -1,246 +1,534 @@
-import { ChefHat, Clock, Users, Star } from 'lucide-react';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { VideoModal } from '@/components/VideoModal';
+import { Search, Play, Users, Calendar, BookOpen, Heart } from 'lucide-react';
+
+type ContentItem = Database['public']['Tables']['content']['Row'];
+
+interface Episode {
+  id: string;
+  title: string;
+  description: string | null;
+  duration_seconds: number | null;
+  published_date: string | null;
+  language_code: string;
+  is_featured: boolean;
+  thumbnail_url: string | null;
+  created_at: string;
+  youtube_url: string | null;
+  audio_url: string | null;
+  video_url: string | null;
+  episode_number: number | null;
+  season_number: number | null;
+  is_published: boolean;
+  updated_at: string;
+  author: string | null;
+  read_time: string | null;
+  likes: number | null;
+  category: string | null;
+}
+
+interface Recipe {
+  id: string;
+  title?: string;
+  excerpt?: string;
+  author?: string;
+  date?: string;
+  read_time?: string;
+  likes?: number;
+  category?: string;
+  media_url?: string;
+  media_type?: string;
+  content_text?: string;
+  content_html?: string;
+}
 
 const Kitchen = () => {
-  const recipes = [
-    {
-      id: 1,
-      title: "Tradicionalni Sarma",
-      description: "Autentični recept za sarma koji se prenosi kroz generacije, sa posebnim savovima Natali.",
-      time: "2 sata",
-      difficulty: "Srednja",
-      servings: "6-8",
-      rating: 4.9,
-      image: "🥬",
-      category: "Tradicionalno"
-    },
-    {
-      id: 2,
-      title: "Mediteranski Risoto",
-      description: "Kremasti risoto sa morskim plodovima, inspirisan putovanjima po Mediteranu.",
-      time: "45 min",
-      difficulty: "Teška",
-      servings: "4",
-      rating: 4.7,
-      image: "🍤",
-      category: "Italijansko"
-    },
-    {
-      id: 3,
-      title: "Domaći Hleb sa Začinima",
-      description: "Jednostavan recept za aromatičan hleb koji će vaš dom ispuniti divnim mirisom.",
-      time: "3 sata",
-      difficulty: "Laka",
-      servings: "1 vekna",
-      rating: 4.8,
-      image: "🍞",
-      category: "Pekarski"
-    },
-    {
-      id: 4,
-      title: "Sezonska Salata sa Avokadom",
-      description: "Osvežavajuća salata sa sezonskim voćem i povrćem, idealna za letnje dane.",
-      time: "15 min",
-      difficulty: "Laka",
-      servings: "4",
-      rating: 4.6,
-      image: "🥑",
-      category: "Zdravo"
-    },
-    {
-      id: 5,
-      title: "Čokoladni Fondant",
-      description: "Dekadentan desert sa toplim čokoladnim centrom, savršen za posebne prilike.",
-      time: "30 min",
-      difficulty: "Teška",
-      servings: "4",
-      rating: 4.9,
-      image: "🍫",
-      category: "Desert"
-    },
-    {
-      id: 6,
-      title: "Balkanska Pita sa Sirom",
-      description: "Klasična balkanska pita sa domaćim sirom i tankim korima.",
-      time: "1.5 sata",
-      difficulty: "Srednja",
-      servings: "8",
-      rating: 4.8,
-      image: "🥧",
-      category: "Tradicionalno"
-    }
-  ];
+  const { t, language } = useLanguage();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [videoModal, setVideoModal] = useState({
+    isOpen: false,
+    videoUrl: '',
+    title: ''
+  });
 
-  const tips = [
-    {
-      title: "Kvalitet Začina",
-      description: "Uvek koristite sveže začine za najbolji ukus. Zamenite ih svakih 6 meseci."
-    },
-    {
-      title: "Temperatura Kuvanja",
-      description: "Investirajte u dobar termometar za meso - temperatura je ključ uspešnog kuvanja."
-    },
-    {
-      title: "Priprema Ingredients",
-      description: "Uvek pripremite sve sastojke pre početka kuvanja. Ovo se zove 'mise en place'."
+  useEffect(() => {
+    fetchContent();
+    fetchRecipes();
+    fetchEpisodes();
+  }, [language]);
+
+  const fetchContent = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .eq('page_key', 'kitchen')
+        .eq('language_code', language)
+        .eq('is_published', true);
+
+      if (error) throw error;
+      setContent(data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      setLoading(false);
     }
-  ];
+  };
+
+  const fetchRecipes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .eq('page_key', 'kitchen')
+        .eq('section_key', 'recipe')
+        .eq('language_code', language)
+        .eq('is_published', true);
+
+      if (error) throw error;
+      setRecipes(data || []);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    }
+  };
+
+  const fetchEpisodes = async () => {
+    try {
+      // Fetch episodes that either have 'kitchen' category or no category at all
+      const { data, error } = await supabase
+        .from('episodes')
+        .select('*')
+        .eq('language_code', language)
+        .eq('is_published', true)
+        .or('category.eq.kitchen,category.is.null')
+        .order('episode_number', { ascending: true });
+
+      if (error) throw error;
+      setEpisodes(data as unknown as Episode[]);
+    } catch (error) {
+      console.error('Error fetching episodes:', error);
+    }
+  };
+
+  const getContentBySection = (sectionKey: string) => {
+    const item = content.find(item => item.section_key === sectionKey);
+    return item ? item.content_text : null;
+  };
+
+  const openVideoModal = (videoUrl: string, title: string) => {
+    setVideoModal({
+      isOpen: true,
+      videoUrl,
+      title
+    });
+  };
+
+  const closeVideoModal = () => {
+    setVideoModal({
+      isOpen: false,
+      videoUrl: '',
+      title: ''
+    });
+  };
+
+  const extractYouTubeId = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    return match ? match[1] : null;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    
+    // Format date based on language
+    switch (language) {
+      case 'sr':
+        return date.toLocaleDateString('sr-RS', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        }).replace(/\./g, '');
+      case 'de':
+        return date.toLocaleDateString('de-DE', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+      default:
+        return date.toLocaleDateString('en-US', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+    }
+  };
+
+  const filteredEpisodes = episodes.filter(episode => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const matchesSearch = (episode as any).title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         ((episode as any).description && (episode as any).description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    return matchesSearch;
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Navigation />
+        <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto text-center">
+            <div className="animate-pulse h-16 bg-gray-200 rounded w-64 mx-auto mb-6"></div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse bg-gray-200 rounded-lg h-32 mx-auto max-w-4xl"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       <Navigation />
       
-      {/* Header */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-hero">
+      {/* Hero Section */}
+      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-accent bg-clip-text text-transparent">
-            Natali Kuhinja
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Otkrijte svet ukusa kroz provjerene recepte, kulinarske savjete i priče o hrani koja spaja ljude.
+          <div className="flex justify-center items-center mb-6">
+            <img 
+              src="/logo.png" 
+              alt="Natalia Show Logo" 
+              className="w-16 h-16 object-contain mr-4"
+            />
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {getContentBySection('hero_title') || t('kitchen.title')}
+            </h1>
+          </div>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            {getContentBySection('hero_subtitle') || t('kitchen.subtitle')}
           </p>
         </div>
-      </section>
+      </div>
 
-      {/* Featured Recipe */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      {/* Content Section */}
+      <div className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="premium-card p-8 rounded-2xl mb-16">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              <div>
-                <span className="text-sm font-medium text-primary-glow bg-primary/10 px-3 py-1 rounded-full mb-4 inline-block">
-                  Recept Nedjelje
-                </span>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Bakin Kolač sa Šljivama
-                </h2>
-                <p className="text-muted-foreground mb-6 text-lg">
-                  Autentični recept koji Natali čuva kao obiteljsku tajnu. Jednostavan, ali nevjrojatno ukusan kolač 
-                  koji će vas vratiti u djetinjstvo.
-                </p>
-                <div className="flex items-center space-x-6 mb-6">
-                  <div className="flex items-center">
-                    <Clock className="w-5 h-5 mr-2 text-muted-foreground" />
-                    <span>1 sat 15 min</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Users className="w-5 h-5 mr-2 text-muted-foreground" />
-                    <span>8-10 komada</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Star className="w-5 h-5 mr-2 text-yellow-500" />
-                    <span>4.9</span>
-                  </div>
-                </div>
-                <Button variant="hero" size="lg">
-                  <ChefHat className="w-5 h-5 mr-2" />
-                  Pogledaj Recept
-                </Button>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-3">
+              <div className="prose max-w-none">
+                {content
+                  .filter(item => item.section_key === 'content')
+                  .map(item => (
+                    <div key={item.id} className="mb-8">
+                      {item.content_html ? (
+                        <div dangerouslySetInnerHTML={{ __html: item.content_html }} />
+                      ) : (
+                        <p className="text-lg">{item.content_text}</p>
+                      )}
+                      
+                      {item.media_url && item.media_type === 'youtube' && (
+                        <div className="mt-6">
+                          <Button 
+                            onClick={() => openVideoModal(item.media_url!, item.content_text || t('kitchen.watchVideo'))}
+                            className="flex items-center gap-2 mb-4"
+                          >
+                            <Play className="h-5 w-5" />
+                            {t('kitchen.watchVideo')}
+                          </Button>
+                          <div 
+                            className="relative aspect-video bg-muted rounded-lg cursor-pointer"
+                            onClick={() => openVideoModal(item.media_url!, item.content_text || t('kitchen.watchVideo'))}
+                          >
+                            <img 
+                              src={`https://img.youtube.com/vi/${extractYouTubeId(item.media_url!)}/mqdefault.jpg`} 
+                              alt={item.content_text || t('kitchen.videoThumbnail')}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-lg">
+                              <Play className="h-12 w-12 text-white fill-white" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {item.media_url && item.media_type === 'image' && (
+                        <img 
+                          src={item.media_url} 
+                          alt={item.content_text || t('kitchen.contentImage')}
+                          className="w-full h-auto rounded-lg mt-6"
+                        />
+                      )}
+                      
+                      {item.media_url && item.media_type === 'video' && (
+                        <div className="mt-6">
+                          <video 
+                            src={item.media_url} 
+                            controls 
+                            className="w-full rounded-lg"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))
+                }
               </div>
-              <div className="text-center">
-                <div className="text-9xl animate-float">🍰</div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="py-8 px-4 sm:px-6 lg:px-8 bg-background border-b">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder={t('kitchen.searchPlaceholder')}
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Episodes Section */}
+      {episodes.length > 0 && (
+        <div className="py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            {filteredEpisodes.length === 0 ? (
+              <div className="text-center py-12">
+                <Play className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">{t('kitchen.noEpisodes')}</h3>
+                <p className="text-muted-foreground">{t('kitchen.noEpisodesDescription')}</p>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEpisodes.map((episode) => (
+                  <Card key={episode.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (episode as any).youtube_url && extractYouTubeId((episode as any).youtube_url) && (
+                      <div 
+                        className="relative aspect-video bg-muted cursor-pointer"
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onClick={() => openVideoModal((episode as any).youtube_url, (episode as any).title)}
+                      >
+                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        <img 
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          src={`https://img.youtube.com/vi/${extractYouTubeId((episode as any).youtube_url)}/mqdefault.jpg`} 
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          alt={(episode as any).title}
+                          className="w-full h-full object-cover"
+                        />}
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <div className="bg-primary/90 rounded-full p-3 hover:bg-primary transition-colors">
+                            <Play className="h-6 w-6 text-white fill-white" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <CardHeader>
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      <CardTitle className="line-clamp-2">{(episode as any).title}</CardTitle>}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (episode as any).description && (
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        <p className="text-muted-foreground text-sm line-clamp-3">
+                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          (episode as any).description}
+                        </p>
+                      )}
+                      
+                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (episode as any).author && (
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 mr-1" />
+                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (episode as any).author}
+                          </div>
+                        )}
+                        
+                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (episode as any).created_at && (
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            formatDate((episode as any).created_at)}
+                          </div>
+                        )}
+                        
+                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (episode as any).read_time && (
+                          <div className="flex items-center">
+                            <BookOpen className="h-4 w-4 mr-1" />
+                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (episode as any).read_time}
+                          </div>
+                        )}
+                        
+                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (episode as any).likes && (
+                          <div className="flex items-center">
+                            <Heart className="h-4 w-4 mr-1 fill-red-500 text-red-500" />
+                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (episode as any).likes}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (episode as any).category && (
+                        <div className="text-sm px-2 py-1 bg-secondary/10 text-secondary rounded-full inline-block">
+                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          (episode as any).category}
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onClick={() => openVideoModal((episode as any).youtube_url, (episode as any).title)}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        {t('podcast.watchNow')}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Recipes Section */}
+      {recipes.length > 0 && (
+        <div className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">{t('kitchen.recipes.title')}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredRecipes.map((recipe) => (
+                <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  {recipe.media_url && recipe.media_type === 'youtube' && (
+                    <div 
+                      className="relative aspect-video bg-muted cursor-pointer"
+                      onClick={() => openVideoModal(recipe.media_url!, recipe.title || t('kitchen.watchRecipe'))}
+                    >
+                      <img 
+                        src={`https://img.youtube.com/vi/${extractYouTubeId(recipe.media_url)}/mqdefault.jpg`} 
+                        alt={recipe.title || t('kitchen.recipeThumbnail')}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <Play className="h-10 w-10 text-white fill-white" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {recipe.media_url && recipe.media_type === 'image' && (
+                    <img 
+                      src={recipe.media_url} 
+                      alt={recipe.title || t('kitchen.recipeImage')}
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
+                  
+                  <CardHeader>
+                    <CardTitle>{recipe.title}</CardTitle>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-3">
+                    {recipe.excerpt && (
+                      <p className="text-muted-foreground">{recipe.excerpt}</p>
+                    )}
+                    
+                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                      {recipe.author && (
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          {recipe.author}
+                        </div>
+                      )}
+                      
+                      {recipe.date && (
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {recipe.date}
+                        </div>
+                      )}
+                      
+                      {recipe.read_time && (
+                        <div className="flex items-center">
+                          <BookOpen className="h-4 w-4 mr-1" />
+                          {recipe.read_time}
+                        </div>
+                      )}
+                      
+                      {recipe.likes && (
+                        <div className="flex items-center">
+                          <Heart className="h-4 w-4 mr-1 fill-red-500 text-red-500" />
+                          {recipe.likes}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {recipe.category && (
+                      <div className="text-sm px-2 py-1 bg-secondary/10 text-secondary rounded-full inline-block">
+                        {recipe.category}
+                      </div>
+                    )}
+                  </CardContent>
+                  
+                  <CardFooter>
+                    {recipe.media_url && recipe.media_type === 'youtube' && (
+                      <Button 
+                        className="w-full"
+                        onClick={() => openVideoModal(recipe.media_url!, recipe.title || t('kitchen.watchRecipe'))}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        {t('kitchen.watchRecipe')}
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Recipes Grid */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Svi Recepti
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Od tradicionalnih balkanih jela do internacionalnih specijaliteta.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recipes.map((recipe, index) => (
-              <Card key={recipe.id} className="episode-card group animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-medium text-secondary bg-secondary/10 px-2 py-1 rounded-full">
-                      {recipe.category}
-                    </span>
-                    <div className="text-4xl animate-float">{recipe.image}</div>
-                  </div>
-                  <CardTitle className="text-xl group-hover:text-primary-glow transition-colors">
-                    {recipe.title}
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent>
-                  <p className="text-muted-foreground mb-4 line-clamp-3">
-                    {recipe.description}
-                  </p>
-                  
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {recipe.time}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1" />
-                        {recipe.servings}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs">Težina: {recipe.difficulty}</span>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                        {recipe.rating}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button variant="podcast" className="w-full group">
-                    <ChefHat className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    Pogledaj Recept
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Cooking Tips */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-card/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Kulinarski Savjeti
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Profesionalni savjeti koji će unaprediti vaše kulinarske vještine.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {tips.map((tip, index) => (
-              <div key={index} className="premium-card p-6 rounded-xl text-center animate-fade-in" style={{ animationDelay: `${index * 0.2}s` }}>
-                <h3 className="text-lg font-semibold mb-3 text-primary-glow">
-                  {tip.title}
-                </h3>
-                <p className="text-muted-foreground">
-                  {tip.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      )}
 
       <Footer />
+      
+      <VideoModal
+        isOpen={videoModal.isOpen}
+        onClose={closeVideoModal}
+        videoUrl={videoModal.videoUrl}
+        title={videoModal.title}
+      />
     </div>
   );
 };

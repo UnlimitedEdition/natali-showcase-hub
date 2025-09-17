@@ -5,7 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  role: string | null;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
@@ -17,7 +19,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,22 +32,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if user is admin
-          setTimeout(async () => {
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('user_id', session.user.id)
-                .single();
-              
-              setIsAdmin(profile?.role === 'admin' || profile?.role === 'editor');
-            } catch (error) {
-              console.error('Error checking admin status:', error);
+          // Check if user is admin - profile should already exist from trigger
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error('Error fetching profile:', error);
               setIsAdmin(false);
+            } else {
+              const fetchedRole = profile?.role;
+              console.log(`[Auth] User role fetched: ${fetchedRole || 'none'}`); // Debug log for role
+              setRole(fetchedRole);
+              setIsAdmin(fetchedRole === 'admin' || fetchedRole === 'editor');
+              setIsSuperAdmin(fetchedRole === 'superadmin');
             }
-          }, 0);
+          } catch (error) {
+            console.error('Error checking admin status:', error);
+            setIsAdmin(false);
+          }
         } else {
+          console.log('[Auth] No user session, resetting roles'); // Debug log
           setIsAdmin(false);
         }
         
@@ -93,7 +105,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user,
       session,
+      role,
       isAdmin,
+      isSuperAdmin,
       loading,
       signIn,
       signUp,

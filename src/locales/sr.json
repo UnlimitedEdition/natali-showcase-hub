@@ -1,0 +1,276 @@
+{
+  "common": {
+    "save": "Sačuvaj",
+    "cancel": "Otkaži",
+    "edit": "Izmeni",
+    "delete": "Obriši",
+    "close": "Zatvori",
+    "loading": "Učitavanje...",
+    "error": "Greška",
+    "success": "Uspeh",
+    "warning": "Upozorenje"
+  },
+  "navigation": {
+    "home": "Početna",
+    "podcast": "Podkast",
+    "kitchen": "Kuhinja",
+    "stories": "Priče",
+    "contact": "Kontakt"
+  },
+  "nav": {
+    "home": "Početna",
+    "podcast": "Podkast",
+    "kitchen": "Kuhinja",
+    "stories": "Priče",
+    "contact": "Kontakt"
+  },
+  "home": {
+    "title": "Dobrodošli u Natali Show",
+    "subtitle": "Elegantan podkast o životu, kuvanju i inspirativnim pričama",
+    "latestEpisode": "Najnovija epizoda",
+    "hero": {
+      "title": "Dobrodošli u Natali Show",
+      "subtitle": "Elegantan podkast o životu, kuvanju i inspirativnim pričama",
+      "listen": "Slušaj sada",
+      "book": "Zakaži gosta"
+    },
+    "episodes": "Epizoda",
+    "listeners": "Slušalaca",
+    "languages": "Jezika"
+  },
+  "podcast": {
+    "title": "Epizode podkasta",
+    "subtitle": "Slušajte naše najnovije epizode",
+    "hero": {
+      "title": "Epizode podkasta",
+      "subtitle": "Slušajte naše najnovije epizode"
+    },
+    "searchPlaceholder": "Pretraži epizode...",
+    "filter": "Filter",
+    "watchVideo": "Pogledaj video",
+    "videoThumbnail": "Sličica videa",
+    "contentImage": "Slika sadržaja",
+    "noEpisodes": "Nema pronađenih epizoda",
+    "noEpisodesDescription": "Trenutno nema dostupnih epizoda. Proverite kasnije za novi sadržaj.",
+    "watchEpisode": "Pogledaj epizodu",
+    "episodeThumbnail": "Sličica epizode",
+    "about": {
+      "title": "O podkastu"
+    },
+    "categories": {
+      "all": "Sve kategorije",
+      "kitchen": "Kuhinja",
+      "stories": "Priče",
+      "lifestyle": "Lifestyle",
+      "interview": "Intervju",
+      "travel": "Putovanja"
+    }
+  },
+  "kitchen": {
+    "title": "Kuhinja",
+    "subtitle": "Ukusi recepti i saveti za kuvanje",
+    "hero": {
+      "title": "Kuhinja",
+      "subtitle": "Ukusi recepti i saveti za kuvanje"
+    },
+    "searchPlaceholder": "Pretraži recepte...",
+    "watchVideo": "Pogledaj video",
+    "videoThumbnail": "Sličica videa",
+    "contentImage": "Slika sadržaja",
+    "watchEpisode": "Pogledaj epizodu",
+    "episodeThumbnail": "Sličica epizode",
+    "watchRecipe": "Pogledaj recept",
+    "recipeThumbnail": "Sličica recepta",
+    "recipeImage": "Slika recepta",
+    "about": {
+      "title": "O kuhinji"
+    },
+    "episodes": {
+      "title": "Epizode kuvanja"
+    },
+    "recipes": {
+      "title": "Recepti"
+    }
+  },
+  "stories": {
+    "title": "Priče",
+    "subtitle": "Inspirativne priče i životne priče",
+    "hero": {
+      "title": "Priče",
+      "subtitle": "Inspirativne priče i životne priče"
+    },
+    "searchPlaceholder": "Pretraži priče...",
+    "watchVideo": "Pogledaj video",
+    "videoThumbnail": "Sličica videa",
+    "contentImage": "Slika sadržaja",
+    "watchStory": "Pogledaj priču",
+    "storyThumbnail": "Sličica priče",
+    "storyImage": "Slika priče",
+    "about": {
+      "title": "O pričama"
+    },
+    "stories": {
+      "title": "Priče"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "Stupite u kontakt",
+      "subtitle": "Drago nam je što želite da nas kontaktirate. Pošaljite nam poruku i odgovorićemo što je pre moguće."
+    },
+    "email": {
+      "title": "Email",
+      "description": "Za opšta pitanja"
+    },
+    "phone": {
+      "title": "Telefon",
+      "description": "Ponedeljak do petak, 9-17h"
+    },
+    "address": {
+      "title": "Adresa",
+      "description": "Lokacija našeg studija"
+    },
+    "hours": {
+      "title": "Radno vreme",
+      "description": "Ponedeljak do petak"
+    },
+    "form": {
+      "title": "Pošaljite nam poruku",
+      "subtitle": "Popunite formular ispod i odgovorićemo vam što je pre moguće.",
+      "firstName": "Ime",
+      "firstNamePlaceholder": "Unesite vaše ime",
+      "lastName": "Prezime",
+      "lastNamePlaceholder": "Unesite vaše prezime",
+      "phone": "Broj telefona",
+      "reason": "Razlog kontakta",
+      "message": "Vaša poruka",
+      "messagePlaceholder": "Recite nam više o vašem upitu...",
+      "submit": "Pošalji poruku",
+      "submitting": "Slanje...",
+      "success": "Poruka je uspešno poslata! Odgovorićemo vam uskoro.",
+      "error": "Slanje poruke nije uspelo. Molimo pokušajte ponovo.",
+      "reasonOptions": {
+        "guest": "Zakaži kao gost",
+        "media": "Medijski upit",
+        "cooking": "Kulinarne saradnje",
+        "support": "Tehnička podrška",
+        "other": "Ostalo"
+      }
+    },
+    "reasons": {
+      "title": "Zašto nas kontaktirati?",
+      "guest": {
+        "title": "Zakaži kao gost",
+        "description": "Zainteresovani ste da budete gost na našem šou? Drago nam je što želite da nas kontaktirate!"
+      },
+      "media": {
+        "title": "Medijski upit",
+        "description": "Za pitanja vezana za medije i novinarstvo"
+      },
+      "cooking": {
+        "title": "Kulinarne saradnje",
+        "description": "Sarađujte s nama na kulinarskim projektima"
+      },
+      "support": {
+        "title": "Tehnička podrška",
+        "description": "Imate problema sa našim sajtom ili sadržajem?"
+      }
+    },
+    "map": {
+      "title": "Posetite naš studio",
+      "description": "Dođite da nas posetite u našem prelepom studiju u centru Beograda.",
+      "button": "Uputstva za dolazak"
+    },
+    "faq": {
+      "title": "Često postavljana pitanja",
+      "subtitle": "Pronađite odgovore na česta pitanja o našem podkastu i uslugama.",
+      "questions": {
+        "guest": {
+          "question": "Kako da postanem gost na vašem šou?",
+          "answer": "Jednostavno popunite kontakt formular sa izabranom opcijom 'Zakaži kao gost', i odgovorićemo vam sa više informacija."
+        },
+        "response": {
+          "question": "Koliko traje da dobijem odgovor?",
+          "answer": "Obično odgovaramo na sve upite u roku od 24-48 sati tokom radnih dana."
+        },
+        "recipe": {
+          "question": "Mogu li da pošaljem svoje recepte?",
+          "answer": "Da! Uvek smo zainteresovani da prikažemo nove recepte. Molimo kontaktirajte nas putem formulara sa izabranom opcijom 'Kulinarne saradnje'."
+        },
+        "consulting": {
+          "question": "Da li nudite konsultacije iz kuvanja?",
+          "answer": "Da, nudimo personalizovane konsultacije iz kuvanja. Izaberite 'Kulinarne saradnje' kada nas kontaktirate za više informacija."
+        }
+      }
+    }
+  },
+  "admin": {
+    "title": "Administratorski panel",
+    "description": "Upravljajte sadržajem, epizodama, korisnicima i podešavanjima",
+    "content": "Sadržaj",
+    "episodes": "Epizode",
+    "users": "Korisnici",
+    "database": "Baza podataka",
+    "settings": "Podešavanja",
+    "panel": {
+      "contentManagement": "Upravljanje sadržajem",
+      "episodesManagement": "Upravljanje epizodama",
+      "siteSettings": "Podešavanja sajta"
+    },
+    "users": {
+      "title": "Upravljanje korisnicima",
+      "guestRequests": "Zahtevi za goste",
+      "totalRequests": "ukupno zahteva",
+      "noGuestRequests": "Još uvek nema zahteva za goste",
+      "reason": "Razlog",
+      "message": "Poruka",
+      "phone": "Telefon"
+    },
+    "errors": {
+      "fetchFailed": "Neuspešno preuzimanje podataka",
+      "guestRequestsFetchFailed": "Neuspešno preuzimanje zahteva za goste",
+      "updateFailed": "Neuspešno ažuriranje stavke",
+      "deleteFailed": "Neuspešno brisanje stavke",
+      "publishToggleFailed": "Neuspešno promenjeno stanje objavljivanja"
+    }
+  },
+  "gdpr": {
+    "banner": {
+      "title": "Cenimo vašu privatnost",
+      "description": "Koristimo kolačiće da poboljšamo vaše iskustvo pregledanja, analiziramo saobraćaj i personalizujemo sadržaj. Klikom na 'Prihvati', pristajete na našu upotrebu kolačića.",
+      "accept": "Prihvati",
+      "reject": "Odbaci",
+      "customize": "Prilagodi",
+      "learnMore": "Saznaj više"
+    },
+    "settings": {
+      "title": "Podešavanja privatnosti",
+      "necessary": {
+        "title": "Neophodni kolačići",
+        "description": "Ovi kolačići su neophodni za pravilno funkcionisanje sajta."
+      },
+      "analytics": {
+        "title": "Analitički kolačići",
+        "description": "Ovi kolačići nam pomažu da razumemo kako posetioci interaguju sa našim sajtom."
+      },
+      "marketing": {
+        "title": "Marketinški kolačići",
+        "description": "Ovi kolačići se koriste za praćenje posetilaca kroz sajtove radi personalizovane reklame."
+      },
+      "save": "Sačuvaj podešavanja"
+    }
+  },
+  "toast": {
+    "success": "Uspeh",
+    "error": "Greška",
+    "welcomeBack": "Dobrodošli nazad!",
+    "accountCreated": "Nalog je uspešno kreiran!",
+    "passwordMismatch": "Lozinke se ne poklapaju",
+    "passwordLength": "Lozinka mora imati najmanje 6 karaktera",
+    "unexpectedError": "Došlo je do neočekivane greške",
+    "uploadSuccess": "Sadržaj je uspešno postavljen",
+    "uploadError": "Greška pri postavljanju sadržaja",
+    "contentUpdated": "Sadržaj je uspešno ažuriran",
+    "contentUpdateError": "Greška pri ažuriranju sadržaja"
+  }
+}

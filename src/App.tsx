@@ -12,7 +12,12 @@ import Kitchen from "./pages/Kitchen";
 import Stories from "./pages/Stories";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
+import Impressum from "./pages/Impressum";
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
+import DatabaseInspector from "./pages/DatabaseInspector";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,7 +29,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/podcast" element={<Podcast />} />
@@ -33,6 +38,11 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/impressum" element={<Impressum />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/cookies" element={<Cookies />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/database-inspector" element={<DatabaseInspector />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

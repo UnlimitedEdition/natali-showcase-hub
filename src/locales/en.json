@@ -1,0 +1,306 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning"
+  },
+  "navigation": {
+    "home": "Home",
+    "podcast": "Podcast",
+    "kitchen": "Kitchen",
+    "stories": "Stories",
+    "contact": "Contact"
+  },
+  "nav": {
+    "home": "Home",
+    "podcast": "Podcast",
+    "kitchen": "Kitchen",
+    "stories": "Stories",
+    "contact": "Contact"
+  },
+  "home": {
+    "title": "Welcome to Natali Show",
+    "subtitle": "An elegant podcast about life, cooking and inspiring stories",
+    "latestEpisode": "Latest Episode",
+    "hero": {
+      "title": "Welcome to Natali Show",
+      "subtitle": "An elegant podcast about life, cooking and inspiring stories",
+      "listen": "Listen Now",
+      "book": "Book Consultation"
+    }
+  },
+  "podcast": {
+    "title": "Podcast Episodes",
+    "subtitle": "Listen to our latest episodes",
+    "hero": {
+      "title": "Podcast Episodes",
+      "subtitle": "Listen to our latest episodes"
+    },
+    "searchPlaceholder": "Search episodes...",
+    "filter": "Filter",
+    "watchVideo": "Watch Video",
+    "videoThumbnail": "Video thumbnail",
+    "contentImage": "Content image",
+    "noEpisodes": "No episodes found",
+    "noEpisodesDescription": "There are currently no episodes available. Check back later for new content.",
+    "watchEpisode": "Watch Episode",
+    "episodeThumbnail": "Episode thumbnail",
+    "about": {
+      "title": "About the Podcast"
+    },
+    "categories": {
+      "all": "All Categories",
+      "kitchen": "Kitchen",
+      "stories": "Stories",
+      "lifestyle": "Lifestyle",
+      "interview": "Interview",
+      "travel": "Travel"
+    }
+  },
+  "kitchen": {
+    "title": "Kitchen",
+    "subtitle": "Delicious recipes and cooking tips",
+    "hero": {
+      "title": "Kitchen",
+      "subtitle": "Delicious recipes and cooking tips"
+    },
+    "searchPlaceholder": "Search recipes...",
+    "watchVideo": "Watch Video",
+    "videoThumbnail": "Video thumbnail",
+    "contentImage": "Content image",
+    "watchEpisode": "Watch Episode",
+    "episodeThumbnail": "Episode thumbnail",
+    "watchRecipe": "Watch Recipe",
+    "recipeThumbnail": "Recipe thumbnail",
+    "recipeImage": "Recipe image",
+    "about": {
+      "title": "About the Kitchen"
+    },
+    "episodes": {
+      "title": "Cooking Episodes"
+    },
+    "recipes": {
+      "title": "Recipes"
+    }
+  },
+  "stories": {
+    "title": "Stories",
+    "subtitle": "Inspirational stories and life experiences",
+    "hero": {
+      "title": "Stories",
+      "subtitle": "Inspirational stories and life experiences"
+    },
+    "searchPlaceholder": "Search stories...",
+    "watchVideo": "Watch Video",
+    "videoThumbnail": "Video thumbnail",
+    "contentImage": "Content image",
+    "watchStory": "Watch Story",
+    "storyThumbnail": "Story thumbnail",
+    "storyImage": "Story image",
+    "about": {
+      "title": "About the Stories"
+    },
+    "stories": {
+      "title": "Stories"
+    }
+  },
+  "contact": {
+    "hero": {
+      "title": "Get in Touch",
+      "subtitle": "We'd love to hear from you. Send us a message and we'll respond as soon as possible."
+    },
+    "email": {
+      "title": "Email",
+      "description": "For general inquiries"
+    },
+    "phone": {
+      "title": "Phone",
+      "description": "Monday to Friday, 9am to 5pm"
+    },
+    "address": {
+      "title": "Address",
+      "description": "Our studio location"
+    },
+    "hours": {
+      "title": "Working Hours",
+      "description": "Monday to Friday"
+    },
+    "form": {
+      "title": "Send us a message",
+      "subtitle": "Fill out the form below and we'll get back to you as soon as possible.",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Enter your last name",
+      "phone": "Phone Number",
+      "reason": "Reason for Contact",
+      "message": "Your Message",
+      "messagePlaceholder": "Tell us more about your inquiry...",
+      "submit": "Send Message",
+      "submitting": "Sending...",
+      "success": "Message sent successfully! We'll get back to you soon.",
+      "error": "Failed to send message. Please try again.",
+      "reasonOptions": {
+        "guest": "Book as Guest",
+        "media": "Media Inquiry",
+        "cooking": "Cooking Collaboration",
+        "support": "Technical Support",
+        "other": "Other"
+      }
+    },
+    "reasons": {
+      "title": "Why Contact Us?",
+      "guest": {
+        "title": "Book as Guest",
+        "description": "Interested in being a guest on our show? We'd love to hear from you!"
+      },
+      "media": {
+        "title": "Media Inquiry",
+        "description": "For press and media related questions"
+      },
+      "cooking": {
+        "title": "Cooking Collaboration",
+        "description": "Partner with us on cooking projects"
+      },
+      "support": {
+        "title": "Technical Support",
+        "description": "Having issues with our website or content?"
+      }
+    },
+    "map": {
+      "title": "Visit Our Studio",
+      "description": "Come visit us at our beautiful studio in the heart of Belgrade.",
+      "button": "Get Directions"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find answers to common questions about our podcast and services.",
+      "questions": {
+        "guest": {
+          "question": "How can I become a guest on your show?",
+          "answer": "Simply fill out the contact form with 'Book as Guest' selected as the reason, and we'll get back to you with more information."
+        },
+        "response": {
+          "question": "How long does it take to get a response?",
+          "answer": "We typically respond to all inquiries within 24-48 hours during business days."
+        },
+        "recipe": {
+          "question": "Can I submit my own recipes?",
+          "answer": "Yes! We're always interested in featuring new recipes. Please contact us through the form with 'Cooking Collaboration' as the reason."
+        },
+        "consulting": {
+          "question": "Do you offer cooking consultations?",
+          "answer": "Yes, we offer personalized cooking consultations. Select 'Cooking Collaboration' when contacting us for more information."
+        }
+      }
+    }
+  },
+  "footer": {
+    "about": "Discover more about Natalia's story, her journey, and passion for cooking and storytelling.",
+    "quickLinks": "Quick Links",
+    "contact": "Contact Information",
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Subscribe to our newsletter to receive the latest news and recipes.",
+      "placeholder": "Enter your email address",
+      "button": "Subscribe"
+    },
+    "copyright": "All rights reserved."
+  },
+  "auth": {
+    "title": "Authentication",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "sendResetLink": "Send Reset Link",
+    "backToSignIn": "Back to Sign In",
+    "welcomeBack": "Welcome back!",
+    "accountCreated": "Account created successfully! Please check your email to confirm your account.",
+    "passwordMismatch": "Passwords do not match",
+    "passwordLength": "Password must be at least 6 characters",
+    "unexpectedError": "An unexpected error occurred",
+    "error": "Error"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "description": "Manage your content, episodes, users and settings",
+    "content": "Content",
+    "episodes": "Episodes",
+    "users": "Users",
+    "database": "Database",
+    "settings": "Settings",
+    "panel": {
+      "contentManagement": "Content Management",
+      "episodesManagement": "Episodes Management",
+      "siteSettings": "Site Settings"
+    },
+    "users": {
+      "title": "User Management",
+      "guestRequests": "Guest Requests",
+      "totalRequests": "total requests",
+      "noGuestRequests": "No guest requests yet",
+      "reason": "Reason",
+      "message": "Message",
+      "phone": "Phone"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch data",
+      "guestRequestsFetchFailed": "Failed to fetch guest requests",
+      "updateFailed": "Failed to update item",
+      "deleteFailed": "Failed to delete item",
+      "publishToggleFailed": "Failed to toggle publish status"
+    }
+  },
+  "gdpr": {
+    "banner": {
+      "title": "We value your privacy",
+      "description": "We use cookies to enhance your browsing experience, analyze traffic and personalize content. By clicking 'Accept', you consent to our use of cookies.",
+      "accept": "Accept",
+      "reject": "Reject",
+      "customize": "Customize",
+      "learnMore": "Learn more"
+    },
+    "settings": {
+      "title": "Privacy Settings",
+      "necessary": {
+        "title": "Necessary Cookies",
+        "description": "These cookies are essential for the website to function properly."
+      },
+      "analytics": {
+        "title": "Analytics Cookies",
+        "description": "These cookies help us understand how visitors interact with our website."
+      },
+      "marketing": {
+        "title": "Marketing Cookies",
+        "description": "These cookies are used to track visitors across websites for personalized advertising."
+      },
+      "save": "Save Settings"
+    }
+  },
+  "toast": {
+    "success": "Success",
+    "error": "Error",
+    "welcomeBack": "Welcome back!",
+    "accountCreated": "Account created successfully!",
+    "passwordMismatch": "Passwords do not match",
+    "passwordLength": "Password must be at least 6 characters",
+    "unexpectedError": "An unexpected error occurred",
+    "uploadSuccess": "Content uploaded successfully",
+    "uploadError": "Failed to upload content",
+    "contentUpdated": "Content updated successfully",
+    "contentUpdateError": "Failed to update content"
+  }
+}
