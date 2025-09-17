@@ -328,4 +328,3 @@ INSERT INTO translations (key, language_code, value) VALUES ('contact.form.error
 INSERT INTO translations (key, language_code, value) VALUES ('contact.form.reasonOptions.guest', 'en', 'Book as Guest');
 INSERT INTO translations (key, language_code, value) VALUES ('contact.form.reasonOptions.media', 'en', 'Media Inquiry');
 INSERT INTO translations (key, language_code, value) VALUES ('contact.form.reasonOptions.cooking', 'en', 'Cooking Collaboration');
-INSERT INTO translations (key, language_code,
