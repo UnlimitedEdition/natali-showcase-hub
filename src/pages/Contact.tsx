@@ -102,7 +102,7 @@ const Contact = () => {
         .insert({
           ...formData,
           language_code: language
-        });
+        } as any);
 
       if (error) throw error;
       

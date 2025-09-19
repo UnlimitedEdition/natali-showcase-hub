@@ -51,7 +51,7 @@ export const CookieBanner: React.FC = () => {
             consent_type: type,
             consent_given: consent,
             language_code: language
-          });
+          } as any);
       }
 
       setShowBanner(false);

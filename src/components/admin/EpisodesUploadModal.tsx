@@ -94,7 +94,6 @@ export const EpisodesUploadModal: React.FC<EpisodesUploadModalProps> = ({
           description: '',
           youtubeUrl: '',
           section: '',
-          additionalTags: [],
           position: null,
         },
         de: {
@@ -102,7 +101,6 @@ export const EpisodesUploadModal: React.FC<EpisodesUploadModalProps> = ({
           description: '',
           youtubeUrl: '',
           section: '',
-          additionalTags: [],
           position: null,
         },
         en: {
@@ -110,7 +108,6 @@ export const EpisodesUploadModal: React.FC<EpisodesUploadModalProps> = ({
           description: '',
           youtubeUrl: '',
           section: '',
-          additionalTags: [],
           position: null,
         },
         isPublished: true,
