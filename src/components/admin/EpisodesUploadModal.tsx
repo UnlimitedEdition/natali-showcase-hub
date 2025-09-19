@@ -17,7 +17,7 @@ interface EpisodeData {
   title: string;
   description: string;
   youtubeUrl: string;
-  section: 'podcast' | 'kitchen' | 'stories' | '';
+  section: string;
   position: number | null;
 }
 
