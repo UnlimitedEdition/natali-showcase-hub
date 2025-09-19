@@ -99,12 +99,10 @@ const Contact = () => {
     try {
       const { error } = await supabase
         .from('guest_requests')
-        .insert([
-          {
-            ...formData,
-            language_code: language
-          }
-        ]);
+        .insert({
+          ...formData,
+          language_code: language
+        });
 
       if (error) throw error;
       
