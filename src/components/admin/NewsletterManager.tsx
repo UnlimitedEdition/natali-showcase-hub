@@ -409,13 +409,16 @@ const NewsletterManager: React.FC = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
+                          <DialogContent className="max-w-2xl" aria-describedby="newsletter-content-description">
                             {selectedNewsletter && (
                               <>
                                 <DialogHeader>
                                   <DialogTitle>{selectedNewsletter.subject}</DialogTitle>
                                 </DialogHeader>
                                 <div className="py-4">
+                                  <p id="newsletter-content-description" className="sr-only">
+                                    Content of newsletter titled {selectedNewsletter.subject}
+                                  </p>
                                   <div className="mb-4">
                                     <Badge>{getStatusBadge(selectedNewsletter.status)}</Badge>
                                   </div>

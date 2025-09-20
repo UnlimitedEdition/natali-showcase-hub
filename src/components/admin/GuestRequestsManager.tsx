@@ -240,13 +240,16 @@ const GuestRequestsManager: React.FC = () => {
 
       {/* View Request Modal */}
       <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="guest-request-details-description">
           {selectedRequest && (
             <>
               <DialogHeader>
                 <DialogTitle>Guest Request Details</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                <p id="guest-request-details-description" className="sr-only">
+                  Detailed view of guest request from {selectedRequest.first_name} {selectedRequest.last_name}
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h3 className="font-medium mb-2">Personal Information</h3>
