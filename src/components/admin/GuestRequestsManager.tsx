@@ -162,12 +162,13 @@ const GuestRequestsManager: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Message</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="hidden md:table-cell">Name</TableHead>
+                    <TableHead className="hidden md:table-cell">Contact</TableHead>
+                    <TableHead className="hidden md:table-cell">Reason</TableHead>
+                    <TableHead className="hidden md:table-cell">Message</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="md:hidden">Guest Request</TableHead>
+                    <TableHead className="md:hidden">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -177,7 +178,7 @@ const GuestRequestsManager: React.FC = () => {
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleViewRequest(request)}
                     >
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
                           <div>
@@ -186,7 +187,7 @@ const GuestRequestsManager: React.FC = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1 text-sm">
                             <Mail className="h-3 w-3" />
@@ -200,15 +201,15 @@ const GuestRequestsManager: React.FC = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Badge variant="outline">{request.reason}</Badge>
                       </TableCell>
-                      <TableCell className="max-w-xs">
+                      <TableCell className="max-w-xs hidden md:table-cell">
                         <p className="text-sm truncate" title={request.message}>
                           {request.message}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <div className="text-sm">
                           {new Date(request.created_at).toLocaleDateString()}
                         </div>
@@ -216,7 +217,37 @@ const GuestRequestsManager: React.FC = () => {
                           {new Date(request.created_at).toLocaleTimeString()}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="md:hidden">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{request.first_name} {request.last_name}</p>
+                              <Badge variant="outline" className="text-xs">{request.reason}</Badge>
+                            </div>
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1 truncate" title={request.message}>
+                            {request.message.substring(0, 50)}{request.message.length > 50 ? '...' : ''}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {new Date(request.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="md:hidden">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteGuestRequest(request.id);
+                          }}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Button
                           variant="outline"
                           size="sm"

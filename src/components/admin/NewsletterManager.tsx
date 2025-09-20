@@ -262,7 +262,7 @@ const NewsletterManager: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
@@ -376,29 +376,99 @@ const NewsletterManager: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[30%]">Preview</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="hidden md:table-cell">Subject</TableHead>
+                    <TableHead className="hidden md:table-cell">Status</TableHead>
+                    <TableHead className="w-[30%] hidden md:table-cell">Preview</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="md:hidden">Newsletter</TableHead>
+                    <TableHead className="md:hidden">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {newsletters.map((newsletter) => (
                     <TableRow key={newsletter.id}>
-                      <TableCell className="font-medium">{newsletter.subject}</TableCell>
-                      <TableCell>{getStatusBadge(newsletter.status)}</TableCell>
-                      <TableCell className="max-w-xs">
+                      <TableCell className="font-medium hidden md:table-cell">{newsletter.subject}</TableCell>
+                      <TableCell className="hidden md:table-cell">{getStatusBadge(newsletter.status)}</TableCell>
+                      <TableCell className="max-w-xs hidden md:table-cell">
                         <p className="text-sm truncate" title={newsletter.content}>
                           {newsletter.content.substring(0, 100)}{newsletter.content.length > 100 ? '...' : ''}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {newsletter.sent_at 
                           ? new Date(newsletter.sent_at).toLocaleDateString()
                           : new Date(newsletter.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="flex gap-2">
+                      <TableCell className="md:hidden">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{newsletter.subject}</span>
+                          <div className="flex items-center gap-2 mt-1">
+                            {getStatusBadge(newsletter.status)}
+                            <span className="text-xs text-muted-foreground">
+                              {newsletter.sent_at 
+                                ? new Date(newsletter.sent_at).toLocaleDateString()
+                                : new Date(newsletter.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate mt-1">
+                            {newsletter.content.substring(0, 50)}{newsletter.content.length > 50 ? '...' : ''}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="flex gap-2 md:hidden">
+                        <Dialog open={isViewModalOpen && selectedNewsletter?.id === newsletter.id} onOpenChange={setIsViewModalOpen}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleViewNewsletter(newsletter)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl" aria-describedby="newsletter-content-description">
+                            {selectedNewsletter && (
+                              <>
+                                <DialogHeader>
+                                  <DialogTitle>{selectedNewsletter.subject}</DialogTitle>
+                                </DialogHeader>
+                                <div className="py-4">
+                                  <p id="newsletter-content-description" className="sr-only">
+                                    Content of newsletter titled {selectedNewsletter.subject}
+                                  </p>
+                                  <div className="mb-4">
+                                    <Badge>{getStatusBadge(selectedNewsletter.status)}</Badge>
+                                  </div>
+                                  <div className="mb-4">
+                                    <p className="text-sm text-muted-foreground">
+                                      Created: {new Date(selectedNewsletter.created_at).toLocaleString()}
+                                    </p>
+                                    {selectedNewsletter.sent_at && (
+                                      <p className="text-sm text-muted-foreground">
+                                        Sent: {new Date(selectedNewsletter.sent_at).toLocaleString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="border rounded-md p-4 max-h-96 overflow-y-auto">
+                                    <p className="whitespace-pre-wrap">{selectedNewsletter.content}</p>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                        {newsletter.status !== 'sent' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleSendNewsletter(newsletter.id)}
+                            disabled={sending}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Dialog open={isViewModalOpen && selectedNewsletter?.id === newsletter.id} onOpenChange={setIsViewModalOpen}>
                           <DialogTrigger asChild>
                             <Button 

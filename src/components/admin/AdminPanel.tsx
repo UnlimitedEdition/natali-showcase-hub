@@ -377,7 +377,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 flex-col md:flex-row">
           {/* Hidden description for accessibility */}
           <div id="admin-panel-description" className="sr-only">
             Admin panel for managing website content, episodes, guest requests, and newsletter subscribers.
@@ -387,7 +387,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
           <div className="w-full md:w-64 border-r bg-background flex-shrink-0">
             <nav className="p-4 h-full">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
-                <TabsList className="grid w-full grid-cols-4 md:grid-cols-1 gap-2 flex-1">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-1 gap-2 sm:grid-cols-4 md:gap-2 flex-1">
                   <TabsTrigger value="content" className="justify-start">
                     <FileText className="mr-2 h-4 w-4" />
                     <span className="hidden md:inline">Content</span>
