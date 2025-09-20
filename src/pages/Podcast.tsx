@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, Play, Users, Calendar, BookOpen, Heart } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Play, Users, Calendar, BookOpen, Heart, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,38 +61,13 @@ const Podcast = () => {
     videoUrl: '',
     title: ''
   });
-
-
-  useEffect(() => {
-    fetchContent();
-    fetchEpisodes().then(() => {
-      // Check if there's a 'play' parameter in the URL
-      const searchParams = new URLSearchParams(location.search);
-      const episodeId = searchParams.get('play');
-      
-      if (episodeId) {
-        // Find the episode with the matching ID
-        const episodeToPlay = episodes.find(episode => episode.id === episodeId);
-        if (episodeToPlay?.youtube_url) {
-          // Open the video modal with this episode
-          openVideoModal(episodeToPlay.youtube_url, episodeToPlay.title);
-        }
-      }
-    });
-  }, [language]);
-
-  useEffect(() => {
-    // Also check for the play parameter when episodes are loaded
-    const searchParams = new URLSearchParams(location.search);
-    const episodeId = searchParams.get('play');
-    
-    if (episodeId && episodes.length > 0) {
-      const episodeToPlay = episodes.find(episode => episode.id === episodeId);
-      if (episodeToPlay?.youtube_url) {
-        openVideoModal(episodeToPlay.youtube_url, episodeToPlay.title);
-      }
-    }
-  }, [episodes, location.search]);
+  const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
+  const observer = useRef<IntersectionObserver | null>(null);
+  const timerRefs = useRef<Map<string, NodeJS.Timeout>>(new Map<string, NodeJS.Timeout>());
+  
+  // State for pagination
+  const [visibleEpisodesCount, setVisibleEpisodesCount] = useState(6);
+  const episodesPerPage = 6;
 
   const fetchContent = async () => {
     try {
@@ -192,12 +167,83 @@ const Podcast = () => {
     }
   };
 
+  const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        // Set a 500ms timer before marking as visible
+        const timer = setTimeout(() => {
+          setVisibleItems(prev => new Set(prev).add(id));
+        }, 500);
+        timerRefs.current.set(id, timer);
+      } else {
+        const id = entry.target.id;
+        // Clear timer if element exits viewport before 500ms
+        if (timerRefs.current.has(id)) {
+          clearTimeout(timerRefs.current.get(id)!);
+          timerRefs.current.delete(id);
+        }
+      }
+    });
+  };
+
+  const loadMoreEpisodes = () => {
+    setVisibleEpisodesCount(prevCount => prevCount + episodesPerPage);
+  };
+
+  useEffect(() => {
+    observer.current = new IntersectionObserver(handleIntersection, {
+      threshold: 0.1
+    });
+
+    return () => {
+      observer.current?.disconnect();
+      // Clear all timers
+      timerRefs.current.forEach(timer => clearTimeout(timer));
+      timerRefs.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchContent();
+    fetchEpisodes().then(() => {
+      // Check if there's a 'play' parameter in the URL
+      const searchParams = new URLSearchParams(location.search);
+      const episodeId = searchParams.get('play');
+      
+      if (episodeId) {
+        // Find the episode with the matching ID
+        const episodeToPlay = episodes.find(episode => episode.id === episodeId);
+        if (episodeToPlay?.youtube_url) {
+          // Open the video modal with this episode
+          openVideoModal(episodeToPlay.youtube_url, episodeToPlay.title);
+        }
+      }
+    });
+  }, [language]);
+
+  useEffect(() => {
+    // Also check for the play parameter when episodes are loaded
+    const searchParams = new URLSearchParams(location.search);
+    const episodeId = searchParams.get('play');
+    
+    if (episodeId && episodes.length > 0) {
+      const episodeToPlay = episodes.find(episode => episode.id === episodeId);
+      if (episodeToPlay?.youtube_url) {
+        openVideoModal(episodeToPlay.youtube_url, episodeToPlay.title);
+      }
+    }
+  }, [episodes, location.search]);
+
   const filteredEpisodes = episodes.filter(episode => {
     const matchesSearch = episode.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (episode.description && episode.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesSearch;
   });
+
+  // Get only the visible episodes based on the current count
+  const visibleEpisodes = filteredEpisodes.slice(0, visibleEpisodesCount);
 
   if (loading) {
     return (
@@ -266,84 +312,112 @@ const Podcast = () => {
               <p className="text-muted-foreground">{t('podcast.noEpisodesDescription')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEpisodes.map((episode) => (
-                <Card key={episode.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  {episode.youtube_url && extractYouTubeId(episode.youtube_url) && (
-                    <div 
-                      className="relative aspect-video bg-muted cursor-pointer"
-                      onClick={() => openVideoModal(episode.youtube_url!, episode.title)}
-                    >
-                      <img 
-                        src={`https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/mqdefault.jpg`} 
-                        alt={episode.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                        <div className="bg-primary/90 rounded-full p-3 hover:bg-primary transition-colors">
-                          <Play className="h-6 w-6 text-white fill-white" />
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleEpisodes.map((episode) => (
+                  <Card key={episode.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    {episode.youtube_url && extractYouTubeId(episode.youtube_url) && (
+                      <div 
+                        className="relative aspect-video bg-muted cursor-pointer"
+                        onClick={() => openVideoModal(episode.youtube_url!, episode.title)}
+                        ref={el => {
+                          if (el) {
+                            observer.current?.observe(el);
+                            el.id = `episode-video-${episode.id}`;
+                          }
+                        }}
+                      >
+                        {visibleItems.has(`episode-video-${episode.id}`) ? (
+                          <img 
+                            src={`https://img.youtube.com/vi/${extractYouTubeId(episode.youtube_url)}/mqdefault.jpg`} 
+                            alt={episode.title}
+                            width="320"
+                            height="180"
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted animate-pulse" />
+                        )}
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <div className="bg-primary/90 rounded-full p-3 hover:bg-primary transition-colors">
+                            <Play className="h-6 w-6 text-white fill-white" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2">{episode.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {episode.description && (
-                      <p className="text-muted-foreground text-sm line-clamp-3">
-                        {episode.description}
-                      </p>
                     )}
-                    
-                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                      {episode.author && (
-                        <div className="flex items-center">
-                          <Users className="h-4 w-4 mr-1" />
-                          {episode.author}
-                        </div>
+                    <CardHeader>
+                      <CardTitle className="line-clamp-2">{episode.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {episode.description && (
+                        <p className="text-muted-foreground text-sm line-clamp-3">
+                          {episode.description}
+                        </p>
                       )}
                       
-                      {episode.created_at && (
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {formatDate(episode.created_at)}
-                        </div>
-                      )}
-                      
-                      {episode.read_time && (
-                        <div className="flex items-center">
-                          <BookOpen className="h-4 w-4 mr-1" />
-                          {episode.read_time}
-                        </div>
-                      )}
-                      
-                      {episode.likes && (
-                        <div className="flex items-center">
-                          <Heart className="h-4 w-4 mr-1 fill-red-500 text-red-500" />
-                          {episode.likes}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {episode.category && (
-                      <div className="text-sm px-2 py-1 bg-secondary/10 text-secondary rounded-full inline-block">
-                        {episode.category}
+                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                        {episode.author && (
+                          <div className="flex items-center">
+                            <Users className="h-4 w-4 mr-1" />
+                            {episode.author}
+                          </div>
+                        )}
+                        
+                        {episode.created_at && (
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {formatDate(episode.created_at)}
+                          </div>
+                        )}
+                        
+                        {episode.read_time && (
+                          <div className="flex items-center">
+                            <BookOpen className="h-4 w-4 mr-1" />
+                            {episode.read_time}
+                          </div>
+                        )}
+                        
+                        {episode.likes && (
+                          <div className="flex items-center">
+                            <Heart className="h-4 w-4 mr-1 fill-red-500 text-red-500" />
+                            {episode.likes}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                      onClick={() => openVideoModal(episode.youtube_url!, episode.title)}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      {t('podcast.watchNow')}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                      
+                      {episode.category && (
+                        <div className="text-sm px-2 py-1 bg-secondary/10 text-secondary rounded-full inline-block">
+                          {episode.category}
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                        onClick={() => openVideoModal(episode.youtube_url!, episode.title)}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        {t('podcast.watchNow')}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+              
+              {/* Load More Button */}
+              {visibleEpisodesCount < filteredEpisodes.length && (
+                <div className="flex justify-center mt-8">
+                  <Button 
+                    onClick={loadMoreEpisodes}
+                    className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                  >
+                    <ChevronDown className="h-4 w-4 mr-2" />
+                    {t('podcast.loadMore')}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

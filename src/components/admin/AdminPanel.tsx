@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { FileText, Podcast, Users, Send, X, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Podcast, Users, Database, Settings, Eye, EyeOff, Plus, Play, Terminal, Languages, Menu, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
 import { EpisodesUploadModal } from './EpisodesUploadModal';
+import ContentManager from './ContentManager';
+import EpisodesManager from './EpisodesManager';
+import GuestRequestsManager from './GuestRequestsManager';
+import NewsletterManager from './NewsletterManager';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -32,25 +31,11 @@ interface SimplifiedContentItem {
 interface Episode {
   id: string;
   title: string;
-  description: string | null;
-  duration_seconds: number | null;
-  published_date: string | null;
+  description: string;
   language_code: string;
-  is_featured: boolean;
-  thumbnail_url: string | null;
-  created_at: string;
-  youtube_url: string | null;
-  audio_url: string | null;
-  video_url: string | null;
-  episode_number: number | null;
-  season_number: number | null;
+  youtube_url: string;
   is_published: boolean;
-  updated_at: string;
-  // These fields may exist in the database but are not guaranteed
-  category?: string | null;
-  author?: string | null;
-  read_time?: string | null;
-  likes?: number | null;
+  created_at: string;
 }
 
 interface GuestRequest {
@@ -58,17 +43,15 @@ interface GuestRequest {
   first_name: string;
   last_name: string;
   email: string;
-  phone: string | null;
+  phone: string;
   reason: string;
   message: string;
-  language_code: string;
   created_at: string;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
-  const { t, loading: translationsLoading, language, translations, loading } = useLanguage();
   const { isAdmin, isSuperAdmin, role } = useAuth();
-  console.log(`[AdminPanel] Loaded role: ${role}, isAdmin: ${isAdmin}, isSuperAdmin: ${isSuperAdmin}`);
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState('content');
   const [content, setContent] = useState<SimplifiedContentItem[]>([]);
   const [groupedEpisodes, setGroupedEpisodes] = useState<Record<string, Episode[]>>({});
@@ -77,11 +60,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [editingEpisodeId, setEditingEpisodeId] = useState<string | null>(null);
-  const [logs, setLogs] = useState<{timestamp: Date, message: string, type: string}[]>([]);
-  const [command, setCommand] = useState('');
-  const [translationLogs, setTranslationLogs] = useState<{timestamp: Date, message: string, type: string}[]>([]);
-  const [translationCommand, setTranslationCommand] = useState('');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchGuestRequests = async () => {
     try {
@@ -102,91 +80,70 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  useEffect(() => {
-    if (isOpen && isAdmin) {
-      console.log('[AdminPanel] Fetching admin data for role:', role);
-      fetchSimplifiedContent();
-      fetchEpisodes();
-      if (role === 'admin' || role === 'superadmin') {
-        console.log('[AdminPanel] Fetching guest requests for admin/superadmin');
-        fetchGuestRequests();
-      } else {
-        console.log('[AdminPanel] Skipping guest requests for role:', role);
-      }
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
+  const [loadingNewsletter, setLoadingNewsletter] = useState(true);
+
+  const fetchNewsletterSubscribers = async () => {
+    setLoadingNewsletter(true);
+    try {
+      const { data, error } = await supabase
+        .from('newsletter_subscribers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNewsletterSubscribers(data || []);
+    } catch (error) {
+      console.error('Error fetching newsletter subscribers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch newsletter subscribers",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingNewsletter(false);
     }
-  }, [isOpen, isAdmin, role]);
+  };
 
   const fetchSimplifiedContent = async () => {
     setLoading(true);
     try {
-      // Fetch content for all languages
-      const { data: srData, error: srError } = await supabase
+      const { data, error } = await supabase
         .from('content')
-        .select('page_key, section_key, content_text')
-        .eq('section_key', 'hero_title')
-        .eq('language_code', 'sr');
+        .select('page_key, section_key, language_code, content_text');
 
-      const { data: deData, error: deError } = await supabase
-        .from('content')
-        .select('page_key, section_key, content_text')
-        .eq('section_key', 'hero_title')
-        .eq('language_code', 'de');
+      if (error) throw error;
 
-      const { data: enData, error: enError } = await supabase
-        .from('content')
-        .select('page_key, section_key, content_text')
-        .eq('section_key', 'hero_title')
-        .eq('language_code', 'en');
-
-      const { data: srSubtitleData, error: srSubtitleError } = await supabase
-        .from('content')
-        .select('page_key, section_key, content_text')
-        .eq('section_key', 'hero_subtitle')
-        .eq('language_code', 'sr');
-
-      const { data: deSubtitleData, error: deSubtitleError } = await supabase
-        .from('content')
-        .select('page_key, section_key, content_text')
-        .eq('section_key', 'hero_subtitle')
-        .eq('language_code', 'de');
-
-      const { data: enSubtitleData, error: enSubtitleError } = await supabase
-        .from('content')
-        .select('page_key, section_key, content_text')
-        .eq('section_key', 'hero_subtitle')
-        .eq('language_code', 'en');
-
-      if (srError || deError || enError || srSubtitleError || deSubtitleError || enSubtitleError) {
-        throw new Error('Failed to fetch content');
-      }
-
-      // Combine data into simplified structure
-      const pages = ['home', 'podcast', 'kitchen', 'stories', 'contact'];
-      const simplifiedContent: SimplifiedContentItem[] = pages.map(page => {
-        const srTitle = srData?.find(item => item.page_key === page)?.content_text || '';
-        const deTitle = deData?.find(item => item.page_key === page)?.content_text || '';
-        const enTitle = enData?.find(item => item.page_key === page)?.content_text || '';
-        const srSubtitle = srSubtitleData?.find(item => item.page_key === page)?.content_text || '';
-        const deSubtitle = deSubtitleData?.find(item => item.page_key === page)?.content_text || '';
-        const enSubtitle = enSubtitleData?.find(item => item.page_key === page)?.content_text || '';
-
-        return {
-          page_key: page,
-          hero_title_sr: srTitle,
-          hero_title_de: deTitle,
-          hero_title_en: enTitle,
-          hero_subtitle_sr: srSubtitle,
-          hero_subtitle_de: deSubtitle,
-          hero_subtitle_en: enSubtitle
-        };
+      // Group content by page_key and section_key
+      const grouped: Record<string, Record<string, Record<string, string>>> = {};
+      
+      data?.forEach(item => {
+        if (!grouped[item.page_key]) {
+          grouped[item.page_key] = {};
+        }
+        if (!grouped[item.page_key][item.section_key]) {
+          grouped[item.page_key][item.section_key] = {};
+        }
+        grouped[item.page_key][item.section_key][item.language_code] = item.content_text || '';
       });
+
+      // Convert to simplified format
+      const simplifiedContent: SimplifiedContentItem[] = Object.entries(grouped).map(([pageKey, sections]) => ({
+        page_key: pageKey,
+        hero_title_sr: sections.hero_title?.sr || '',
+        hero_title_de: sections.hero_title?.de || '',
+        hero_title_en: sections.hero_title?.en || '',
+        hero_subtitle_sr: sections.hero_subtitle?.sr || '',
+        hero_subtitle_de: sections.hero_subtitle?.de || '',
+        hero_subtitle_en: sections.hero_subtitle?.en || '',
+      }));
 
       setContent(simplifiedContent);
     } catch (error) {
       console.error('Error fetching content:', error);
       toast({
         title: "Error",
-        description: "Failed to load content",
+        description: "Failed to fetch content",
         variant: "destructive"
       });
     } finally {
@@ -202,47 +159,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      const grouped = data.reduce((acc: Record<string, Episode[]>, episode: Episode) => {
-        if (!acc[episode.id]) {
-          acc[episode.id] = [];
+
+      // Group episodes by id
+      const grouped: Record<string, Episode[]> = {};
+      data?.forEach(episode => {
+        if (!grouped[episode.id]) {
+          grouped[episode.id] = [];
         }
-        acc[episode.id].push(episode);
-        return acc;
-      }, {});
+        grouped[episode.id].push(episode);
+      });
+
       setGroupedEpisodes(grouped);
     } catch (error) {
       console.error('Error fetching episodes:', error);
-    }
-  };
-
-  const togglePublished = async (id: string, tableName: 'content' | 'episodes', currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from(tableName)
-        .update({ is_published: !currentStatus })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Content ${!currentStatus ? 'published' : 'unpublished'} successfully`,
-      });
-
-      if (tableName === 'content') {
-        fetchSimplifiedContent();
-      } else {
-        fetchEpisodes();
-      }
-    } catch (error) {
-      console.error('Error updating status:', error);
       toast({
         title: "Error",
-        description: "Failed to update status",
+        description: "Failed to fetch episodes",
         variant: "destructive"
       });
     }
   };
+
+  useEffect(() => {
+    if (isOpen && isAdmin) {
+      fetchSimplifiedContent();
+      fetchEpisodes();
+      if (role === 'admin' || role === 'superadmin') {
+        fetchGuestRequests();
+      }
+      fetchNewsletterSubscribers();
+    }
+  }, [isOpen, isAdmin, role]);
 
   const handleContentChange = (pageKey: string, field: string, value: string) => {
     setContent(prev => prev.map(item => 
@@ -253,7 +200,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const saveAllContent = async () => {
     setSaving(true);
     try {
-      // Create array of all updates
       const updates = [];
       
       for (const item of content) {
@@ -340,301 +286,158 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const togglePublished = async (id: string, table: string, isPublished: boolean) => {
+    try {
+      const { error } = await supabase
+        .from(table)
+        .update({ is_published: !isPublished })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Item ${!isPublished ? 'published' : 'unpublished'} successfully`,
+      });
+
+      if (table === 'episodes') {
+        fetchEpisodes();
+      }
+    } catch (error) {
+      console.error('Error updating publish status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update publish status",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (!isAdmin) {
     return null;
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="px-6 py-4 border-b">
+      {/* Keep existing JSX structure */}
+      <DialogContent className="max-w-7xl max-h-[95vh] h-[95vh] p-0 overflow-hidden flex flex-col" aria-describedby="admin-panel-description">
+        <DialogHeader className="px-6 py-4 border-b bg-muted flex-shrink-0">
           <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              <span>Admin Panel</span>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Settings className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Admin Panel</h1>
+                <p className="text-sm text-muted-foreground">Manage your content and episodes</p>
+              </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} className="rounded-full">
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex h-full">
+        <div className="flex flex-1 min-h-0">
+          {/* Hidden description for accessibility */}
+          <div id="admin-panel-description" className="sr-only">
+            Admin panel for managing website content, episodes, guest requests, and newsletter subscribers.
+          </div>
+          
           {/* Sidebar for tabs on mobile/desktop */}
-          <div className="w-64 border-r bg-background hidden md:block">
-            <nav className="p-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-1">
+          <div className="w-full md:w-64 border-r bg-background flex-shrink-0">
+            <nav className="p-4 h-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-4 md:grid-cols-1 gap-2 flex-1">
                   <TabsTrigger value="content" className="justify-start">
                     <FileText className="mr-2 h-4 w-4" />
-                    Content
+                    <span className="hidden md:inline">Content</span>
+                    <span className="md:hidden">Content</span>
                   </TabsTrigger>
                   <TabsTrigger value="episodes" className="justify-start">
                     <Podcast className="mr-2 h-4 w-4" />
-                    Episodes
+                    <span className="hidden md:inline">Episodes</span>
+                    <span className="md:hidden">Episodes</span>
                   </TabsTrigger>
                   {(role === 'admin' || role === 'superadmin') && (
                     <TabsTrigger value="guests" className="justify-start">
                       <Users className="mr-2 h-4 w-4" />
-                      Guest Requests
+                      <span className="hidden md:inline">Guest Requests</span>
+                      <span className="md:hidden">Guests</span>
                     </TabsTrigger>
                   )}
                   <TabsTrigger value="logs" className="justify-start">
-                    <Terminal className="mr-2 h-4 w-4" />
-                    Logs
+                    <Send className="mr-2 h-4 w-4" />
+                    <span className="hidden md:inline">Newsletter</span>
+                    <span className="md:hidden">Newsletter</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
             </nav>
           </div>
 
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden p-4"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-
-          {/* Mobile menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden fixed top-16 left-0 w-full bg-background border-b z-50">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-1">
-                  <TabsTrigger value="content" className="justify-start">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Content
-                  </TabsTrigger>
-                  <TabsTrigger value="episodes" className="justify-start">
-                    <Podcast className="mr-2 h-4 w-4" />
-                    Episodes
-                  </TabsTrigger>
-                  {(role === 'admin' || role === 'superadmin') && (
-                    <TabsTrigger value="guests" className="justify-start">
-                      <Users className="mr-2 h-4 w-4" />
-                      Guest Requests
-                    </TabsTrigger>
-                  )}
-                  <TabsTrigger value="logs" className="justify-start">
-                    <Terminal className="mr-2 h-4 w-4" />
-                    Logs
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          )}
-
           {/* Main content area */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            <Tabs value={activeTab} className="w-full">
+          <div className="flex-1 overflow-hidden">
+            <Tabs value={activeTab} className="w-full h-full flex flex-col">
               {/* Content Tab */}
-              <TabsContent value="content" className="mt-0">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold">Manage Content</h2>
-                    <Button onClick={saveAllContent} disabled={saving || loadingContent}>
-                      {saving ? 'Saving...' : 'Save All Changes'}
-                    </Button>
-                  </div>
-                  {loadingContent ? (
-                    <div>Loading content...</div>
-                  ) : (
-                    <div className="space-y-6">
-                      {content.map((item) => (
-                        <Card key={item.page_key}>
-                          <CardHeader>
-                            <CardTitle>{item.page_key.toUpperCase()}</CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-6">
-                            {/* Hero Title */}
-                            <div className="space-y-2">
-                              <h3 className="font-semibold">Hero Title</h3>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                  <Label>SR</Label>
-                                  <Input
-                                    value={item.hero_title_sr}
-                                    onChange={(e) => handleContentChange(item.page_key, 'hero_title_sr', e.target.value)}
-                                  />
-                                </div>
-                                <div>
-                                  <Label>DE</Label>
-                                  <Input
-                                    value={item.hero_title_de}
-                                    onChange={(e) => handleContentChange(item.page_key, 'hero_title_de', e.target.value)}
-                                  />
-                                </div>
-                                <div>
-                                  <Label>EN</Label>
-                                  <Input
-                                    value={item.hero_title_en}
-                                    onChange={(e) => handleContentChange(item.page_key, 'hero_title_en', e.target.value)}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            {/* Hero Subtitle */}
-                            <div className="space-y-2">
-                              <h3 className="font-semibold">Hero Subtitle</h3>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                  <Label>SR</Label>
-                                  <Input
-                                    value={item.hero_subtitle_sr}
-                                    onChange={(e) => handleContentChange(item.page_key, 'hero_subtitle_sr', e.target.value)}
-                                  />
-                                </div>
-                                <div>
-                                  <Label>DE</Label>
-                                  <Input
-                                    value={item.hero_subtitle_de}
-                                    onChange={(e) => handleContentChange(item.page_key, 'hero_subtitle_de', e.target.value)}
-                                  />
-                                </div>
-                                <div>
-                                  <Label>EN</Label>
-                                  <Input
-                                    value={item.hero_subtitle_en}
-                                    onChange={(e) => handleContentChange(item.page_key, 'hero_subtitle_en', e.target.value)}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
+              <TabsContent value="content" className="mt-0 h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                  <ContentManager 
+                    content={content}
+                    loadingContent={loadingContent}
+                    saving={saving}
+                    handleContentChange={handleContentChange}
+                    saveAllContent={saveAllContent}
+                  />
                 </div>
               </TabsContent>
 
               {/* Episodes Tab */}
-              <TabsContent value="episodes" className="mt-0">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold">Manage Episodes</h2>
-                    <Button onClick={() => { setEditingEpisodeId(null); setIsUploadModalOpen(true); }}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Upload New Episode
-                    </Button>
-                  </div>
-                  <div className="space-y-4">
-                    {Object.values(groupedEpisodes).map((group) => {
-                      const id = group[0].id;
-                      const sample = group[0];
-                      const titles = group.map(ep => `${ep.language_code.toUpperCase()}: ${ep.title}`).join('\n');
-                      const description = group.find(ep => ep.language_code === language)?.description || group[0].description || 'No description';
-                      const languages = group.map(ep => ep.language_code).join(', ');
-
-                      return (
-                        <Card key={id}>
-                          <CardContent className="p-4">
-                            <div className="mb-4">
-                              <h3 className="font-semibold">Video ID: {id}</h3>
-                              <p className="text-sm text-muted-foreground">YouTube URL: {sample.youtube_url || 'None'}</p>
-                              <div className="mt-2">
-                                <strong>Titles:</strong>
-                                <pre className="text-sm mt-1 p-2 bg-muted rounded whitespace-pre-wrap">{titles}</pre>
-                              </div>
-                              {description && (
-                                <p className="text-sm text-muted-foreground mt-2">
-                                  Description ({language}): {description}
-                                </p>
-                              )}
-                              <p className="text-sm mt-1">Languages: {languages}</p>
-                              <p className="text-sm">Published: {sample.is_published ? 'Yes' : 'No'}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => togglePublished(id, 'episodes', sample.is_published)}
-                              >
-                                {sample.is_published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                                {sample.is_published ? 'Unpublish' : 'Publish'}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => { setEditingEpisodeId(id); setIsUploadModalOpen(true); }}
-                              >
-                                Edit
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </div>
-                {isUploadModalOpen && (
-                  <EpisodesUploadModal
-                    isOpen={isUploadModalOpen}
-                    episodeId={editingEpisodeId}
-                    onClose={() => {
-                      setIsUploadModalOpen(false);
-                      setEditingEpisodeId(null);
-                      fetchEpisodes();
-                    }}
+              <TabsContent value="episodes" className="mt-0 h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                  <EpisodesManager
+                    groupedEpisodes={groupedEpisodes}
+                    language={language}
+                    fetchEpisodes={fetchEpisodes}
+                    togglePublished={togglePublished}
                   />
-                )}
+                </div>
               </TabsContent>
 
               {/* Guest Requests Tab */}
               {(role === 'admin' || role === 'superadmin') && (
-                <TabsContent value="guests" className="mt-0">
-                  <h2 className="text-2xl font-bold mb-6">Guest Requests</h2>
-                  <div className="grid gap-4">
-                    {guestRequests.map((request) => (
-                      <Card key={request.id}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold">{request.first_name} {request.last_name}</h3>
-                              <p className="text-sm text-muted-foreground">{request.email}</p>
-                              <p className="text-sm">Reason: {request.reason}</p>
-                              <p className="text-sm mt-2">Message: {request.message}</p>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{new Date(request.created_at).toLocaleDateString()}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                <TabsContent value="guests" className="mt-0 h-full flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                    <GuestRequestsManager guestRequests={guestRequests} />
                   </div>
                 </TabsContent>
               )}
 
-              {/* Logs Tab */}
-              <TabsContent value="logs" className="mt-0">
-                <div className="space-y-4">
-                  <h2 className="text-2xl font-bold">System Logs</h2>
-                  <Textarea
-                    value={logs.map(log => `[${log.timestamp.toLocaleString()}] ${log.message} (${log.type})`).join('\n')}
-                    readOnly
-                    className="h-64"
-                    placeholder="No logs available..."
+              {/* Newsletter Tab */}
+              <TabsContent value="logs" className="mt-0 h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                  <NewsletterManager 
+                    subscribers={newsletterSubscribers}
+                    loading={loadingNewsletter}
+                    refreshData={fetchNewsletterSubscribers}
                   />
-                  <div className="flex gap-2">
-                    <Input
-                      value={command}
-                      onChange={(e) => setCommand(e.target.value)}
-                      placeholder="Enter command..."
-                    />
-                    <Button onClick={() => {
-                      // Placeholder for command execution
-                      setLogs(prev => [...prev, { timestamp: new Date(), message: command, type: 'info' }]);
-                      setCommand('');
-                    }}>
-                      Execute
-                    </Button>
-                  </div>
                 </div>
               </TabsContent>
             </Tabs>
           </div>
         </div>
+        
+        {isUploadModalOpen && (
+          <EpisodesUploadModal
+            isOpen={isUploadModalOpen}
+            episodeId={editingEpisodeId}
+            onClose={() => {
+              setIsUploadModalOpen(false);
+              setEditingEpisodeId(null);
+              fetchEpisodes();
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

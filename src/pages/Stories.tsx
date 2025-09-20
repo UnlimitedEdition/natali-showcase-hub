@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -8,31 +8,31 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import { VideoModal } from '@/components/VideoModal';
-import { Search, Play, Users, Calendar, BookOpen, Heart } from 'lucide-react';
+import { Search, Play, Users, Calendar, BookOpen, Heart, ChevronDown } from 'lucide-react';
 
 type ContentItem = Database['public']['Tables']['content']['Row'];
 
 interface Episode {
   id: string;
-  title: string;
-  description: string | null;
-  duration_seconds: number | null;
-  published_date: string | null;
-  language_code: string;
-  is_featured: boolean;
-  thumbnail_url: string | null;
-  created_at: string;
-  youtube_url: string | null;
-  audio_url: string | null;
-  video_url: string | null;
-  episode_number: number | null;
-  season_number: number | null;
-  is_published: boolean;
-  updated_at: string;
-  author: string | null;
-  read_time: string | null;
-  likes: number | null;
-  category: string | null;
+  title?: string;
+  description?: string | null;
+  duration_seconds?: number | null;
+  published_date?: string | null;
+  language_code?: string;
+  is_featured?: boolean;
+  thumbnail_url?: string | null;
+  created_at?: string;
+  youtube_url?: string | null;
+  audio_url?: string | null;
+  video_url?: string | null;
+  episode_number?: number | null;
+  season_number?: number | null;
+  is_published?: boolean;
+  updated_at?: string;
+  author?: string | null;
+  read_time?: string | null;
+  likes?: number | null;
+  category?: string | null;
 }
 
 interface Story {
@@ -52,22 +52,25 @@ interface Story {
 
 const Stories = () => {
   const { t, language } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState('');
   const [content, setContent] = useState<ContentItem[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [videoModal, setVideoModal] = useState({
     isOpen: false,
     videoUrl: '',
     title: ''
   });
-
-  useEffect(() => {
-    fetchContent();
-    fetchStories();
-    fetchEpisodes();
-  }, [language]);
+  const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
+  const observer = useRef<IntersectionObserver | null>(null);
+  const timerRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  
+  // State for pagination
+  const [visibleEpisodesCount, setVisibleEpisodesCount] = useState(6);
+  const [visibleStoriesCount, setVisibleStoriesCount] = useState(6);
+  const episodesPerPage = 6;
+  const storiesPerPage = 6;
 
   const fetchContent = async () => {
     try {
@@ -175,6 +178,49 @@ const Stories = () => {
     }
   };
 
+  const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        // Set a 500ms timer before marking as visible
+        const timer = setTimeout(() => {
+          setVisibleItems(prev => new Set(prev).add(id));
+        }, 500);
+        timerRefs.current.set(id, timer);
+      } else {
+        const id = entry.target.id;
+        // Clear timer if element exits viewport before 500ms
+        if (timerRefs.current.has(id)) {
+          clearTimeout(timerRefs.current.get(id)!);
+          timerRefs.current.delete(id);
+        }
+      }
+    });
+  };
+
+  const loadMoreEpisodes = () => {
+    setVisibleEpisodesCount(prevCount => prevCount + episodesPerPage);
+  };
+
+  useEffect(() => {
+    observer.current = new IntersectionObserver(handleIntersection, {
+      threshold: 0.1
+    });
+
+    return () => {
+      observer.current?.disconnect();
+      // Clear all timers
+      timerRefs.current.forEach(timer => clearTimeout(timer));
+      timerRefs.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchContent();
+    fetchStories();
+    fetchEpisodes();
+  }, [language]);
+
   const filteredEpisodes = episodes.filter(episode => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const matchesSearch = (episode as any).title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -183,6 +229,20 @@ const Stories = () => {
     
     return matchesSearch;
   });
+
+  // Get only the visible episodes based on the current count
+  const visibleEpisodes = filteredEpisodes.slice(0, visibleEpisodesCount);
+  
+  // Filter and paginate stories
+  const filteredStories = stories.filter(story => {
+    const matchesSearch = story.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         story.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         story.author?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesSearch;
+  });
+  
+  const visibleStories = filteredStories.slice(0, visibleStoriesCount);
 
   if (loading) {
     return (
@@ -247,6 +307,12 @@ const Stories = () => {
                           <Button 
                             onClick={() => openVideoModal(item.media_url!, item.content_text || t('stories.watchVideo'))}
                             className="flex items-center gap-2 mb-4"
+                            ref={el => {
+                              if (el) {
+                                observer.current?.observe(el);
+                                el.id = `content-video-button-${item.id}`;
+                              }
+                            }}
                           >
                             <Play className="h-5 w-5" />
                             {t('stories.watchVideo')}
@@ -254,12 +320,25 @@ const Stories = () => {
                           <div 
                             className="relative aspect-video bg-muted rounded-lg cursor-pointer"
                             onClick={() => openVideoModal(item.media_url!, item.content_text || t('stories.watchVideo'))}
+                            ref={el => {
+                              if (el) {
+                                observer.current?.observe(el);
+                                el.id = `content-video-${item.id}`;
+                              }
+                            }}
                           >
-                            <img 
-                              src={`https://img.youtube.com/vi/${extractYouTubeId(item.media_url!)}/mqdefault.jpg`} 
-                              alt={item.content_text || t('stories.videoThumbnail')}
-                              className="w-full h-full object-cover rounded-lg"
-                            />
+                            {visibleItems.has(`content-video-${item.id}`) ? (
+                              <img 
+                                src={`https://img.youtube.com/vi/${extractYouTubeId(item.media_url!)}/mqdefault.jpg`} 
+                                alt={item.content_text || t('stories.videoThumbnail')}
+                                width="320"
+                                height="180"
+                                loading="lazy"
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-muted animate-pulse rounded-lg" />
+                            )}
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-lg">
                               <Play className="h-12 w-12 text-white fill-white" />
                             </div>
@@ -271,6 +350,7 @@ const Stories = () => {
                         <img 
                           src={item.media_url} 
                           alt={item.content_text || t('stories.contentImage')}
+                          loading="lazy"
                           className="w-full h-auto rounded-lg mt-6"
                         />
                       )}
@@ -280,6 +360,7 @@ const Stories = () => {
                           <video 
                             src={item.media_url} 
                             controls 
+                            preload="none"
                             className="w-full rounded-lg"
                           />
                         </div>
@@ -310,119 +391,139 @@ const Stories = () => {
       </div>
 
       {/* Episodes Section */}
-      {episodes.length > 0 && (
-        <div className="py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            
-            {filteredEpisodes.length === 0 ? (
-              <div className="text-center py-12">
-                <Play className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">{t('stories.noEpisodes')}</h3>
-                <p className="text-muted-foreground">{t('stories.noEpisodesDescription')}</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEpisodes.map((episode) => (
-                  <Card key={episode.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (episode as any).youtube_url && extractYouTubeId((episode as any).youtube_url) && (
-                      <div 
-                        className="relative aspect-video bg-muted cursor-pointer"
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {filteredEpisodes.length === 0 ? (
+            <div className="text-center py-12">
+              <Play className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">{t('podcast.noEpisodes')}</h3>
+              <p className="text-muted-foreground">{t('podcast.noEpisodesDescription')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {visibleEpisodes.map((episode) => (
+                <Card key={episode.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (episode as any).youtube_url && extractYouTubeId((episode as any).youtube_url) && (
+                    <div 
+                      className="relative aspect-video bg-muted cursor-pointer"
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      onClick={() => openVideoModal((episode as any).youtube_url, (episode as any).title)}
+                      ref={el => {
+                        if (el) {
+                          observer.current?.observe(el);
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          el.id = `episode-video-${(episode as any).id}`;
+                        }
+                      }}
+                    >
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      visibleItems.has(`episode-video-${(episode as any).id}`) ? (
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        onClick={() => openVideoModal((episode as any).youtube_url, (episode as any).title)}
-                      >
-                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
                         <img 
                           // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           src={`https://img.youtube.com/vi/${extractYouTubeId((episode as any).youtube_url)}/mqdefault.jpg`} 
                           // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           alt={(episode as any).title}
+                          width="320"
+                          height="180"
+                          loading="lazy"
                           className="w-full h-full object-cover"
-                        />}
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                          <div className="bg-primary/90 rounded-full p-3 hover:bg-primary transition-colors">
-                            <Play className="h-6 w-6 text-white fill-white" />
-                          </div>
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted animate-pulse" />
+                      )}
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <div className="bg-primary/90 rounded-full p-3 hover:bg-primary transition-colors">
+                          <Play className="h-6 w-6 text-white fill-white" />
                         </div>
+                      </div>
+                    </div>
+                  )}
+                  <CardHeader>
+                    {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    <CardTitle className="line-clamp-2">{(episode as any).title}</CardTitle>}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (episode as any).description && (
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      <p className="text-muted-foreground text-sm line-clamp-3">
+                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (episode as any).description}
+                      </p>
+                    )}
+                    
+                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (episode as any).author && (
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          (episode as any).author}
+                        </div>
+                      )}
+                      
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (episode as any).created_at && (
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          formatDate((episode as any).created_at)}
+                        </div>
+                      )}
+                      
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (episode as any).read_time && (
+                        <div className="flex items-center">
+                          <BookOpen className="h-4 w-4 mr-1" />
+                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          (episode as any).read_time}
+                        </div>
+                      )}
+                      
+                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (episode as any).likes && (
+                        <div className="flex items-center">
+                          <Heart className="h-4 w-4 mr-1 fill-red-500 text-red-500" />
+                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          (episode as any).likes}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (episode as any).category && (
+                      <div className="text-sm px-2 py-1 bg-secondary/10 text-secondary rounded-full inline-block">
+                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (episode as any).category}
                       </div>
                     )}
-                    <CardHeader>
-                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      <CardTitle className="line-clamp-2">{(episode as any).title}</CardTitle>}
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (episode as any).description && (
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        <p className="text-muted-foreground text-sm line-clamp-3">
-                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          (episode as any).description}
-                        </p>
-                      )}
-                      
-                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (episode as any).author && (
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-1" />
-                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (episode as any).author}
-                          </div>
-                        )}
-                        
-                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (episode as any).created_at && (
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            formatDate((episode as any).created_at)}
-                          </div>
-                        )}
-                        
-                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (episode as any).read_time && (
-                          <div className="flex items-center">
-                            <BookOpen className="h-4 w-4 mr-1" />
-                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (episode as any).read_time}
-                          </div>
-                        )}
-                        
-                        {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (episode as any).likes && (
-                          <div className="flex items-center">
-                            <Heart className="h-4 w-4 mr-1 fill-red-500 text-red-500" />
-                            {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (episode as any).likes}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (episode as any).category && (
-                        <div className="text-sm px-2 py-1 bg-secondary/10 text-secondary rounded-full inline-block">
-                          {// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          (episode as any).category}
-                        </div>
-                      )}
-                    </CardContent>
-                    <CardFooter>
-                      <Button 
-                        className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        onClick={() => openVideoModal((episode as any).youtube_url, (episode as any).title)}
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        {t('podcast.watchNow')}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      onClick={() => openVideoModal((episode as any).youtube_url, (episode as any).title)}
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      {t('podcast.watchNow')}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+          {filteredEpisodes.length > visibleEpisodesCount && (
+            <div className="flex justify-center mt-8">
+              <Button onClick={loadMoreEpisodes} className="bg-primary/90 hover:bg-primary/80">
+                {t('stories.loadMore')}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Stories Section */}
       {stories.length > 0 && (
@@ -436,7 +537,25 @@ const Stories = () => {
                     <div 
                       className="relative aspect-video bg-muted cursor-pointer"
                       onClick={() => openVideoModal(story.media_url!, story.title || t('stories.watchStory'))}
+                      ref={el => {
+                        if (el) {
+                          observer.current?.observe(el);
+                          el.id = `story-video-${story.id}`;
+                        }
+                      }}
                     >
+                      {visibleItems.has(`story-video-${story.id}`) ? (
+                        <img 
+                          src={`https://img.youtube.com/vi/${extractYouTubeId(story.media_url)}/mqdefault.jpg`} 
+                          alt={story.title || t('stories.storyThumbnail')}
+                          width="320"
+                          height="180"
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted animate-pulse" />
+                      )}
                       <img 
                         src={`https://img.youtube.com/vi/${extractYouTubeId(story.media_url)}/mqdefault.jpg`} 
                         alt={story.title || t('stories.storyThumbnail')}
@@ -452,6 +571,7 @@ const Stories = () => {
                     <img 
                       src={story.media_url} 
                       alt={story.title || t('stories.storyImage')}
+                      loading="lazy"
                       className="w-full h-48 object-cover"
                     />
                   )}

@@ -71,12 +71,14 @@ const Footer = () => {
         const id = generateUUID();
         const { error: insertError } = await supabase
           .from('newsletter_subscribers')
-          .insert({
+          .upsert({
             id,
             email,
             status: 'pending',
             subscribed_at: new Date().toISOString(),
             unsub_token: newToken
+          }, {
+            onConflict: 'email'
           });
 
         if (insertError) throw insertError;
@@ -116,7 +118,7 @@ const Footer = () => {
             {/* About */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">Natalia Show</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground min-h-[6rem]">
                 {t('footer.about')}
               </p>
               <div className="flex space-x-3">
@@ -145,7 +147,7 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Quick Links */}
+            {/* Legal Links */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">{t('footer.quickLinks')}</h3>
               <ul className="space-y-2">
@@ -154,6 +156,16 @@ const Footer = () => {
                 <li><a href="/stories" className="text-muted-foreground hover:text-primary-glow transition-colors">{t('nav.stories')}</a></li>
                 <li><a href="/contact" className="text-muted-foreground hover:text-primary-glow transition-colors">{t('nav.contact')}</a></li>
               </ul>
+              
+              {/* Legal Requirements for Germany */}
+              <div className="pt-4">
+                <h4 className="text-md font-semibold text-foreground mb-2">{t('footer.impressum')}</h4>
+                <ul className="space-y-2">
+                  <li><a href="/privacy" className="text-muted-foreground hover:text-primary-glow transition-colors text-sm">{t('footer.privacy')}</a></li>
+                  <li><a href="/terms" className="text-muted-foreground hover:text-primary-glow transition-colors text-sm">{t('footer.terms')}</a></li>
+                  <li><a href="/cookies" className="text-muted-foreground hover:text-primary-glow transition-colors text-sm">{t('footer.cookies')}</a></li>
+                </ul>
+              </div>
             </div>
 
             {/* Contact Info */}
@@ -196,17 +208,17 @@ const Footer = () => {
                       required
                     />
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-start space-x-2">
                     <input
                       type="checkbox"
                       id="consent"
                       name="consent"
                       required
-                      className="rounded"
+                      className="rounded mt-1"
                       aria-label={t('footer.newsletter.consent') || 'Saglasnost sa uslovima newsletter-a'}
                     />
                     <Label htmlFor="consent" className="text-xs text-muted-foreground cursor-pointer">
-                      {t('footer.newsletter.consent')}
+                      {t('footer.newsletter.consent') || 'Slažem se sa uslovima korišćenja i politikom privatnosti. Potvrđujem da imam više od 16 godina i dajem saglasnost za primanje newsletter-a.'}
                     </Label>
                   </div>
                   <Button type="submit" variant="premium" className="w-full" disabled={isSubmitting}>
@@ -223,7 +235,7 @@ const Footer = () => {
         <div className="py-8 text-center text-muted-foreground">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
             <div className="flex items-center justify-center space-x-1">
-              <span>Made with</span>
+              <span>{t('footer.madeWith')}</span>
               <Heart className="w-4 h-4 text-red-500" />
               <span>by Natalia Show</span>
             </div>

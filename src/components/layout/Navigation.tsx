@@ -43,9 +43,11 @@ const Navigation = () => {
             <img 
               src="/logo.png" 
               alt="Natalia Show Logo" 
+              width="40"
+              height="40"
               className="w-10 h-10 object-contain"
             />
-            <div className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+            <div className="text-xl font-bold bg-gradient-accent bg-clip-text text-transparent min-w-[120px]">
               Natalia Show
             </div>
           </Link>

@@ -24,6 +24,7 @@ interface Episode {
   season_number: number | null;
   is_published: boolean;
   updated_at: string;
+  category?: string | null;
 }
 
 const FeaturedEpisodes = () => {
@@ -37,6 +38,53 @@ const FeaturedEpisodes = () => {
     title: ''
   });
 
+  // Get category from episode
+  const getEpisodeCategory = (episode: Episode) => {
+    // Try to determine category based on category field first
+    if (episode.category) {
+      return episode.category;
+    }
+    
+    // If no category field, try to determine from title
+    const title = episode.title.toLowerCase();
+    
+    if (title.includes('kitchen') || title.includes('recept') || title.includes('кухињ') || title.includes('рецепт')) {
+      return 'kitchen';
+    } else if (title.includes('story') || title.includes('прича') || title.includes('storija')) {
+      return 'stories';
+    } else {
+      return 'podcast';
+    }
+  };
+
+  // Get category from episode for display
+  const getCategoryName = (episode: Episode) => {
+    // Try to determine category based on category field first
+    if (episode.category) {
+      switch (episode.category) {
+        case 'kitchen':
+          return t('home.featuredEpisodes.kitchen');
+        case 'stories':
+          return t('home.featuredEpisodes.stories');
+        case 'podcast':
+          return t('home.featuredEpisodes.podcast');
+        default:
+          return t(`home.featuredEpisodes.${episode.category}`) || t('podcast.categories.podcast');
+      }
+    }
+    
+    // If no category field, try to determine from title
+    const title = episode.title.toLowerCase();
+    
+    if (title.includes('kitchen') || title.includes('recept') || title.includes('кухињ') || title.includes('рецепт')) {
+      return t('home.featuredEpisodes.kitchen');
+    } else if (title.includes('story') || title.includes('прича') || title.includes('storija')) {
+      return t('home.featuredEpisodes.stories');
+    } else {
+      return t('home.featuredEpisodes.podcast');
+    }
+  };
+
   useEffect(() => {
     fetchFeaturedEpisodes();
   }, [language]);
@@ -45,65 +93,75 @@ const FeaturedEpisodes = () => {
     try {
       setLoading(true);
       
-      // Fetch all published episodes for the current language
-      const { data: allEpisodes, error } = await supabase
-        .from('episodes')
-        .select('*')
-        .eq('is_published', true)
-        .eq('language_code', language)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching episodes:', error);
-        setLoading(false);
-        return;
-      }
-
-      // Categorize episodes based on their category field
-      const categorizedEpisodes: Record<string, Episode> = {};
-      
       // Define our target categories
       const targetCategories = ['podcast', 'kitchen', 'stories'];
       
-      // Initialize with null values
-      targetCategories.forEach(category => {
-        categorizedEpisodes[category] = null;
-      });
+      // Array to hold our selected episodes
+      const selectedEpisodes: Episode[] = [];
       
-      // Process each episode to categorize it
-      for (const episode of allEpisodes) {
-        // Determine episode category
-        let episodeCategory = episode.category;
+      // Fetch the latest episode for each category
+      for (const category of targetCategories) {
+        // First, fetch all published episodes
+        const { data: allEpisodes, error: episodesError } = await supabase
+          .from('episodes')
+          .select('*')
+          .eq('is_published', true)
+          .order('created_at', { ascending: false })
+          .limit(50); // Fetch reasonable number to ensure we can group properly
+
+        if (episodesError) {
+          console.error(`Error fetching ${category} episodes:`, episodesError);
+          continue;
+        }
+
+        // Group episodes by group_id (or by id if no group_id)
+        const groupedEpisodes: Record<string, Episode[]> = {};
         
-        // If no category is set, try to determine from title
-        if (!episodeCategory) {
-          const title = episode.title.toLowerCase();
-          if (title.includes('kitchen') || title.includes('recept') || title.includes('кухињ') || title.includes('рецепт')) {
-            episodeCategory = 'kitchen';
-          } else if (title.includes('story') || title.includes('прича') || title.includes('storija')) {
-            episodeCategory = 'stories';
-          } else {
-            episodeCategory = 'podcast';
+        // Filter and group episodes by the target category
+        allEpisodes.forEach(episode => {
+          // Determine episode category using our consistent function
+          const episodeCategory = getEpisodeCategory(episode);
+          
+          // Only process episodes that match our target category
+          if (episodeCategory === category) {
+            const groupId = episode.group_id || episode.id; // Use episode id if no group_id
+            if (!groupedEpisodes[groupId]) {
+              groupedEpisodes[groupId] = [];
+            }
+            groupedEpisodes[groupId].push(episode);
           }
-        }
+        });
+
+        // For each group, select the episode in the current language, or the first one if none exists
+        const categoryEpisodes: Episode[] = [];
         
-        // Store the first (most recent) episode for each category
-        if (targetCategories.includes(episodeCategory) && !categorizedEpisodes[episodeCategory]) {
-          categorizedEpisodes[episodeCategory] = episode;
-        }
+        Object.values(groupedEpisodes).forEach(group => {
+          // Try to find episode in current language
+          let episode = group.find(ep => ep.language_code === language);
+          
+          // If not found, use the first episode in the group
+          if (!episode) {
+            episode = group[0];
+          }
+          
+          // Only add if we have an episode
+          if (episode) {
+            categoryEpisodes.push(episode);
+          }
+        });
+
+        // Sort by created_at to get the most recent and take only the first one
+        categoryEpisodes.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
         
-        // If we have all categories, break early
-        if (targetCategories.every(cat => categorizedEpisodes[cat])) {
-          break;
+        // Add the most recent episode to our array (only one per category)
+        if (categoryEpisodes.length > 0) {
+          selectedEpisodes.push(categoryEpisodes[0]);
         }
       }
-      
-      // Convert to array, maintaining order: podcast, kitchen, stories
-      const episodesArray = targetCategories
-        .map(category => categorizedEpisodes[category])
-        .filter(Boolean) as Episode[];
 
-      setEpisodes(episodesArray);
+      setEpisodes(selectedEpisodes);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching featured episodes:', error);
@@ -141,20 +199,6 @@ const FeaturedEpisodes = () => {
           month: 'long', 
           year: 'numeric' 
         });
-    }
-  };
-
-  // Get category from episode
-  const getCategoryName = (episode: Episode) => {
-    // Try to determine category based on title
-    const title = episode.title.toLowerCase();
-    
-    if (title.includes('kitchen') || title.includes('recept') || title.includes('кухињ') || title.includes('рецепт')) {
-      return t('podcast.categories.kitchen');
-    } else if (title.includes('story') || title.includes('прича') || title.includes('storija')) {
-      return t('podcast.categories.stories');
-    } else {
-      return t('podcast.categories.podcast');
     }
   };
 

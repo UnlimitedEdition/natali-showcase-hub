@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Mic } from 'lucide-react';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Mic } from 'lucide-react';
 
 interface ContentItem {
   id: string;
@@ -97,12 +97,18 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
+      // Увек уносимо податке у guest_requests базу, без обзира на разлог
       const { error } = await supabase
         .from('guest_requests')
         .insert({
-          ...formData,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone || null,
+          reason: formData.reason,
+          message: formData.message,
           language_code: language
-        } as any);
+        });
 
       if (error) throw error;
       
@@ -229,13 +235,15 @@ const Contact = () => {
             <img 
               src="/logo.png" 
               alt="Natalia Show Logo" 
+              width="64"
+              height="64"
               className="w-16 h-16 rounded-full object-contain mr-4"
             />
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-accent bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-accent bg-clip-text text-transparent min-w-[200px]">
               {heroTitle}
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto min-h-[3rem]">
             {heroSubtitle}
           </p>
         </div>
@@ -249,7 +257,9 @@ const Contact = () => {
               <Card key={index} className="premium-card text-center animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                 <CardHeader>
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="w-6 h-6 text-primary-glow" />
+                    <React.Suspense fallback={<div className="w-6 h-6 animate-pulse bg-primary-glow/30 rounded-full" />}>
+                      <item.icon className="w-6 h-6 text-primary-glow" />
+                    </React.Suspense>
                   </div>
                   <CardTitle className="text-lg">{item.title}</CardTitle>
                 </CardHeader>
@@ -330,6 +340,7 @@ const Contact = () => {
                     value={formData.reason}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    aria-label={t('contact.form.reason')}
                   >
                     <option value={t('contact.form.reasonOptions.guest')}>{t('contact.form.reasonOptions.guest')}</option>
                     <option value={t('contact.form.reasonOptions.media')}>{t('contact.form.reasonOptions.media')}</option>

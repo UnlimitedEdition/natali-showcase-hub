@@ -36,7 +36,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
         <p id="video-modal-description" className="sr-only">
           Video player modal with YouTube content
         </p>
-        <div className="relative w-full aspect-video">
+        <div className="relative w-full aspect-video bg-black">
           <Button
             variant="ghost"
             size="icon"
@@ -49,6 +49,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
             title={title}
             frameBorder="0"
+            loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="w-full h-full"

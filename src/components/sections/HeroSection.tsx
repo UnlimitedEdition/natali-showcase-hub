@@ -98,14 +98,24 @@ const HeroSection = () => {
 
   const fetchEpisodeCount = async () => {
     try {
-      // Count distinct episodes by counting unique YouTube URLs
-      const { count, error } = await supabase
+      // We need to count distinct group_id values, treating episodes without group_id as individual groups
+      const { data, error } = await supabase
         .from('episodes')
-        .select('*', { count: 'exact', head: true })
+        .select('id, group_id')
         .eq('is_published', true);
       
       if (error) throw error;
-      setEpisodeCount(count || 0);
+      
+      // Count unique groups - episodes without group_id are treated as individual groups
+      const uniqueGroups = new Set();
+      
+      data.forEach(episode => {
+        // Use group_id if available, otherwise use episode id
+        const groupId = episode.group_id || episode.id;
+        uniqueGroups.add(groupId);
+      });
+      
+      setEpisodeCount(uniqueGroups.size);
     } catch (error) {
       console.error('Error fetching episode count:', error);
     }
