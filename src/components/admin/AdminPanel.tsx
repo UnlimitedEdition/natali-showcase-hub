@@ -286,7 +286,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const togglePublished = async (id: string, table: string, isPublished: boolean) => {
+  const togglePublished = async (id: string, table: 'episodes' | 'content', isPublished: boolean) => {
     try {
       const { error } = await supabase
         .from(table)
@@ -408,7 +408,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               {(role === 'admin' || role === 'superadmin') && (
                 <TabsContent value="guests" className="mt-0 h-full flex flex-col">
                   <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                    <GuestRequestsManager guestRequests={guestRequests} />
+                    <GuestRequestsManager />
                   </div>
                 </TabsContent>
               )}
@@ -416,11 +416,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               {/* Newsletter Tab */}
               <TabsContent value="logs" className="mt-0 h-full flex flex-col">
                 <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                  <NewsletterManager 
-                    subscribers={newsletterSubscribers}
-                    loading={loadingNewsletter}
-                    refreshData={fetchNewsletterSubscribers}
-                  />
+                  <NewsletterManager />
                 </div>
               </TabsContent>
             </Tabs>

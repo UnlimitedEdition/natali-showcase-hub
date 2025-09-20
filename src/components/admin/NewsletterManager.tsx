@@ -14,22 +14,30 @@ interface Subscriber {
   id: string;
   email: string;
   created_at: string;
-  is_confirmed: boolean;
-  language_code: string;
+  is_active: boolean;
+  language_preference: string;
   status: string;
   subscribed_at: string;
   unsub_token: string;
+  confirmation_sent_at: string;
+  confirmation_token: string;
+  confirmed_at: string;
+  name: string;
 }
 
 interface Newsletter {
   id: string;
   email: string;
   created_at: string;
-  is_confirmed: boolean;
-  language_code: string;
+  is_active: boolean;
+  language_preference: string;
   status: string;
   subscribed_at: string;
   unsub_token: string;
+  confirmation_sent_at: string;
+  confirmation_token: string;
+  confirmed_at: string;
+  name: string;
 }
 
 const NewsletterManager: React.FC = () => {
@@ -159,8 +167,8 @@ const NewsletterManager: React.FC = () => {
             <div className="flex items-center">
               <Mail className="h-8 w-8 text-primary mr-3" />
               <div>
-                <p className="text-sm text-muted-foreground">Confirmed</p>
-                <p className="text-2xl font-bold">{subscribers.filter(s => s.is_confirmed).length}</p>
+                <p className="text-sm text-muted-foreground">Active</p>
+                <p className="text-2xl font-bold">{subscribers.filter(s => s.is_active).length}</p>
               </div>
             </div>
           </CardContent>
@@ -235,25 +243,27 @@ const NewsletterManager: React.FC = () => {
             <div className="flex-1 overflow-y-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Language</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Language</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
                 </TableHeader>
                 <TableBody>
                   {subscribers.map((subscriber) => (
                     <TableRow key={subscriber.id}>
                       <TableCell>{subscriber.email}</TableCell>
+                      <TableCell>{subscriber.name || 'N/A'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{subscriber.language_code.toUpperCase()}</Badge>
+                        <Badge variant="outline">{subscriber.language_preference.toUpperCase()}</Badge>
                       </TableCell>
                       <TableCell>
-                        {subscriber.is_confirmed ? (
-                          <Badge variant="default">Confirmed</Badge>
-                      ) : (
-                          <Badge variant="secondary">Pending</Badge>
+                        {subscriber.is_active ? (
+                          <Badge variant="default">Active</Badge>
+                        ) : (
+                          <Badge variant="secondary">Inactive</Badge>
                         )}
                       </TableCell>
                       <TableCell>
