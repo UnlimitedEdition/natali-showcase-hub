@@ -49,6 +49,17 @@ interface GuestRequest {
   created_at: string;
 }
 
+// Додајемо интерфејс за newsletter
+interface Newsletter {
+  id: string;
+  subject: string;
+  content: string;
+  status: string;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const { isAdmin, isSuperAdmin, role } = useAuth();
   const { language } = useLanguage();
@@ -81,27 +92,54 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   };
 
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
+  const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loadingNewsletter, setLoadingNewsletter] = useState(true);
 
   const fetchNewsletterSubscribers = async () => {
     setLoadingNewsletter(true);
     try {
+      console.log('Покушавам да учитам претплатнике у AdminPanel...');
+      // Користимо тачно име табеле како је дефинисано у бази
       const { data, error } = await supabase
         .from('newsletter_subscribers')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Грешка при учитавању претплатника у AdminPanel:', error);
+        throw error;
+      }
+      
+      console.log('Примљени подаци о претплатницима у AdminPanel:', data);
       setNewsletterSubscribers(data || []);
     } catch (error) {
       console.error('Error fetching newsletter subscribers:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch newsletter subscribers",
+        description: "Failed to fetch newsletter subscribers: " + (error as Error).message,
         variant: "destructive"
       });
     } finally {
       setLoadingNewsletter(false);
+    }
+  };
+
+  const fetchNewsletters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('newsletters')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNewsletters(data || []);
+    } catch (error) {
+      console.error('Error fetching newsletters:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch newsletters",
+        variant: "destructive"
+      });
     }
   };
 
@@ -186,8 +224,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       fetchEpisodes();
       if (role === 'admin' || role === 'superadmin') {
         fetchGuestRequests();
+        fetchNewsletterSubscribers();
       }
-      fetchNewsletterSubscribers();
+      fetchNewsletters();
     }
   }, [isOpen, isAdmin, role]);
 

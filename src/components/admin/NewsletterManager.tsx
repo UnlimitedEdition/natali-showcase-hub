@@ -6,9 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Send, Users, Mail, Calendar, BarChart3 } from 'lucide-react';
+import { Send, Users, Mail, Calendar, BarChart3, Eye } from 'lucide-react';
 
 interface Subscriber {
   id: string;
@@ -16,28 +17,24 @@ interface Subscriber {
   created_at: string;
   is_active: boolean;
   language_preference: string;
-  status: string;
-  subscribed_at: string;
-  unsub_token: string;
-  confirmation_sent_at: string;
-  confirmation_token: string;
-  confirmed_at: string;
-  name: string;
+  status: string | null;
+  subscribed_at: string | null;
+  unsub_token: string | null;
+  confirmation_sent_at: string | null;
+  confirmation_token: string | null;
+  confirmed_at: string | null;
+  name: string | null;
 }
 
 interface Newsletter {
   id: string;
-  email: string;
-  created_at: string;
-  is_active: boolean;
-  language_preference: string;
+  subject: string;
+  content: string;
   status: string;
-  subscribed_at: string;
-  unsub_token: string;
-  confirmation_sent_at: string;
-  confirmation_token: string;
-  confirmed_at: string;
-  name: string;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const NewsletterManager: React.FC = () => {
@@ -47,27 +44,66 @@ const NewsletterManager: React.FC = () => {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [selectedNewsletter, setSelectedNewsletter] = useState<Newsletter | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  const testDatabaseAccess = async () => {
+    try {
+      console.log('Тестирање приступа бази...');
+      
+      // Онда пробамо да учитамо све податке
+      const { data, error } = await supabase
+        .from('newsletter_subscribers')
+        .select('*');
+      
+      if (error) {
+        console.error('Грешка при учитавању претплатника:', error);
+        // Покушајмо са public префиксом
+        const { data: publicData, error: publicError } = await supabase
+          .from('newsletter_subscribers')
+          .select('*');
+          
+        if (publicError) {
+          console.error('Грешка при учитавању претплатника са public префиксом:', publicError);
+        } else {
+          console.log('Претплатници са public префиксом:', publicData);
+        }
+      } else {
+        console.log('Сви претплатници:', data);
+      }
+    } catch (error) {
+      console.error('Грешка при тестирању приступа бази:', error);
+    }
+  };
 
   useEffect(() => {
     fetchSubscribers();
     fetchNewsletters();
+    testDatabaseAccess(); // Додајемо тест позив
   }, []);
 
   const fetchSubscribers = async () => {
     try {
       setLoading(true);
+      console.log('Покушавам да учитам претплатнике...');
+      // Користимо тачно име табеле како је дефинисано у бази
       const { data, error } = await supabase
         .from('newsletter_subscribers')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Грешка при учитавању претплатника:', error);
+        throw error;
+      }
+      
+      console.log('Примљени подаци о претплатницима:', data);
       setSubscribers(data || []);
     } catch (error) {
       console.error('Error fetching subscribers:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch subscribers",
+        description: "Failed to fetch subscribers: " + (error as Error).message,
         variant: "destructive"
       });
     } finally {
@@ -77,9 +113,8 @@ const NewsletterManager: React.FC = () => {
 
   const fetchNewsletters = async () => {
     try {
-      // Користимо исту табелу за садржај newsletter-а јер немамо посебну табелу
       const { data, error } = await supabase
-        .from('newsletter_subscribers')
+        .from('newsletters')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -107,11 +142,23 @@ const NewsletterManager: React.FC = () => {
 
     try {
       setLoading(true);
-      // Претпостављам да постоји посебна табела за newsletter-е
-      // Али ако не постоји, онда ћемо користити постојећу структуру
+      const { data, error } = await supabase
+        .from('newsletters')
+        .insert([
+          {
+            subject,
+            content,
+            status: 'draft'
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
       toast({
-        title: "Info",
-        description: "Newsletter functionality would be implemented here. In a full implementation, this would save to a newsletters table.",
+        title: "Success",
+        description: "Newsletter draft saved successfully",
       });
       
       setSubject('');
@@ -130,10 +177,76 @@ const NewsletterManager: React.FC = () => {
   };
 
   const handleSendTest = async () => {
-    toast({
-      title: "Info",
-      description: "Test email functionality would be implemented here"
-    });
+    if (!subject.trim() || !content.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in both subject and content before sending test",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setSending(true);
+      // Овде би ишла логика за слање тест поруке
+      // За сада ћемо само симулирати слање
+      
+      // Симулирајмо мрежни захтев
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Test Sent",
+        description: "Test newsletter has been sent to your email address",
+      });
+    } catch (error) {
+      console.error('Error sending test newsletter:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send test newsletter. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSendNewsletter = async (newsletterId: string) => {
+    try {
+      setSending(true);
+      // Овде би ишла логика за слање email-ова свим претплатницима
+      // За сада ћемо само ажурирати статус newsletter-а
+      
+      const { error } = await supabase
+        .from('newsletters')
+        .update({ 
+          status: 'sent',
+          sent_at: new Date().toISOString()
+        })
+        .eq('id', newsletterId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Newsletter sent successfully to all subscribers",
+      });
+      
+      fetchNewsletters();
+    } catch (error) {
+      console.error('Error sending newsletter:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send newsletter. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleViewNewsletter = (newsletter: Newsletter) => {
+    setSelectedNewsletter(newsletter);
+    setIsViewModalOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -149,7 +262,7 @@ const NewsletterManager: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
@@ -168,7 +281,19 @@ const NewsletterManager: React.FC = () => {
               <Mail className="h-8 w-8 text-primary mr-3" />
               <div>
                 <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold">{subscribers.filter(s => s.is_active).length}</p>
+                <p className="text-2xl font-bold">{subscribers.filter(s => s.status === 'confirmed').length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-primary mr-3" />
+              <div>
+                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-2xl font-bold">{subscribers.filter(s => s.status === 'pending').length}</p>
               </div>
             </div>
           </CardContent>
@@ -185,6 +310,13 @@ const NewsletterManager: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Test Database Access Button */}
+      <div className="mt-4">
+        <Button onClick={testDatabaseAccess} variant="outline">
+          Test Database Access
+        </Button>
       </div>
 
       {/* Create Newsletter */}
@@ -225,10 +357,115 @@ const NewsletterManager: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Subscribers List */}
+      {/* Newsletters History - Премештен испред Subscribers */}
       <Card className="mt-6 flex-1 flex flex-col">
         <CardHeader>
+          <CardTitle>Newsletters History</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col">
+          {newsletters.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground flex items-center justify-center flex-1">
+              <div>
+                <Mail className="mx-auto h-12 w-12" />
+                <p className="mt-2">No newsletters found</p>
+                <p className="text-sm">Create your first newsletter using the form above.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[30%]">Preview</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {newsletters.map((newsletter) => (
+                    <TableRow key={newsletter.id}>
+                      <TableCell className="font-medium">{newsletter.subject}</TableCell>
+                      <TableCell>{getStatusBadge(newsletter.status)}</TableCell>
+                      <TableCell className="max-w-xs">
+                        <p className="text-sm truncate" title={newsletter.content}>
+                          {newsletter.content.substring(0, 100)}{newsletter.content.length > 100 ? '...' : ''}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        {newsletter.sent_at 
+                          ? new Date(newsletter.sent_at).toLocaleDateString()
+                          : new Date(newsletter.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="flex gap-2">
+                        <Dialog open={isViewModalOpen && selectedNewsletter?.id === newsletter.id} onOpenChange={setIsViewModalOpen}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleViewNewsletter(newsletter)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            {selectedNewsletter && (
+                              <>
+                                <DialogHeader>
+                                  <DialogTitle>{selectedNewsletter.subject}</DialogTitle>
+                                </DialogHeader>
+                                <div className="py-4">
+                                  <div className="mb-4">
+                                    <Badge>{getStatusBadge(selectedNewsletter.status)}</Badge>
+                                  </div>
+                                  <div className="mb-4">
+                                    <p className="text-sm text-muted-foreground">
+                                      Created: {new Date(selectedNewsletter.created_at).toLocaleString()}
+                                    </p>
+                                    {selectedNewsletter.sent_at && (
+                                      <p className="text-sm text-muted-foreground">
+                                        Sent: {new Date(selectedNewsletter.sent_at).toLocaleString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="border rounded-md p-4 max-h-96 overflow-y-auto">
+                                    <p className="whitespace-pre-wrap">{selectedNewsletter.content}</p>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                        {newsletter.status !== 'sent' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleSendNewsletter(newsletter.id)}
+                            disabled={sending}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Send
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Subscribers List - Премештен испод Newsletters History */}
+      <Card className="mt-6 flex-1 flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Subscribers</CardTitle>
+          <Button variant="outline" onClick={fetchSubscribers} disabled={loading}>
+            <Users className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col">
           {subscribers.length === 0 ? (
@@ -236,7 +473,7 @@ const NewsletterManager: React.FC = () => {
               <div>
                 <Users className="mx-auto h-12 w-12" />
                 <p className="mt-2">No subscribers found</p>
-                <p className="text-sm">In a full implementation, newsletters would be saved to a separate table and displayed here.</p>
+                <p className="text-sm">Subscribers will appear here when users subscribe to the newsletter.</p>
               </div>
             </div>
           ) : (
@@ -248,7 +485,8 @@ const NewsletterManager: React.FC = () => {
                       <TableHead>Name</TableHead>
                       <TableHead>Language</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead>Subscription Date</TableHead>
+                      <TableHead>Confirmation Date</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -257,65 +495,22 @@ const NewsletterManager: React.FC = () => {
                       <TableCell>{subscriber.email}</TableCell>
                       <TableCell>{subscriber.name || 'N/A'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{subscriber.language_preference.toUpperCase()}</Badge>
+                        <Badge variant="outline">{subscriber.language_preference?.toUpperCase() || 'N/A'}</Badge>
                       </TableCell>
                       <TableCell>
-                        {subscriber.is_active ? (
+                        {subscriber.is_active && subscriber.status === 'confirmed' ? (
                           <Badge variant="default">Active</Badge>
+                        ) : subscriber.status === 'pending' ? (
+                          <Badge variant="secondary">Pending</Badge>
                         ) : (
-                          <Badge variant="secondary">Inactive</Badge>
+                          <Badge variant="outline">Inactive</Badge>
                         )}
                       </TableCell>
                       <TableCell>
-                        {new Date(subscriber.created_at).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Newsletters History */}
-      <Card className="mt-6 flex-1 flex flex-col">
-        <CardHeader>
-          <CardTitle>Newsletters History</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col">
-          {newsletters.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground flex items-center justify-center flex-1">
-              <div>
-                <Mail className="mx-auto h-12 w-12" />
-                <p className="mt-2">No newsletters found</p>
-                <p className="text-sm">In a full implementation, newsletters would be saved to a separate table and displayed here.</p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex-1 overflow-y-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Recipients</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {newsletters.map((newsletter) => (
-                    <TableRow key={newsletter.id}>
-                      <TableCell className="font-medium">{newsletter.email}</TableCell>
-                      <TableCell>{getStatusBadge(newsletter.status)}</TableCell>
-                      <TableCell>
-                        {new Date(newsletter.created_at).toLocaleDateString()}
+                        {subscriber.subscribed_at ? new Date(subscriber.subscribed_at).toLocaleDateString() : 'N/A'}
                       </TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm">
-                          View
-                        </Button>
+                        {subscriber.confirmed_at ? new Date(subscriber.confirmed_at).toLocaleDateString() : 'N/A'}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -5,23 +5,27 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Users, Mail, Phone, Calendar, User, MessageSquare, Trash2 } from 'lucide-react';
+import { Users, Mail, Phone, Calendar, User, MessageSquare, Trash2, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface GuestRequest {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   reason: string;
   message: string;
   created_at: string;
   language_code: string;
+  updated_at: string;
 }
 
 const GuestRequestsManager: React.FC = () => {
   const [guestRequests, setGuestRequests] = useState<GuestRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<GuestRequest | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   
   const fetchGuestRequests = async () => {
     try {
@@ -70,9 +74,15 @@ const GuestRequestsManager: React.FC = () => {
     }
   };
 
+  const handleViewRequest = (request: GuestRequest) => {
+    setSelectedRequest(request);
+    setIsViewModalOpen(true);
+  };
+
   useEffect(() => {
     fetchGuestRequests();
   }, []);
+
   return (
     <div className="h-full flex flex-col">
       {/* Header with statistics */}
@@ -162,7 +172,11 @@ const GuestRequestsManager: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {guestRequests.map((request) => (
-                    <TableRow key={request.id}>
+                    <TableRow 
+                      key={request.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleViewRequest(request)}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
@@ -206,7 +220,10 @@ const GuestRequestsManager: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => deleteGuestRequest(request.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteGuestRequest(request.id);
+                          }}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -220,6 +237,69 @@ const GuestRequestsManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* View Request Modal */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {selectedRequest && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Guest Request Details</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Personal Information</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Name</p>
+                        <p>{selectedRequest.first_name} {selectedRequest.last_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Email</p>
+                        <p>{selectedRequest.email}</p>
+                      </div>
+                      {selectedRequest.phone && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Phone</p>
+                          <p>{selectedRequest.phone}</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm text-muted-foreground">Language</p>
+                        <Badge variant="outline">{selectedRequest.language_code.toUpperCase()}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">Request Information</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Reason</p>
+                        <Badge>{selectedRequest.reason}</Badge>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Submitted</p>
+                        <p>{new Date(selectedRequest.created_at).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Last Updated</p>
+                        <p>{new Date(selectedRequest.updated_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">Message</h3>
+                  <div className="border rounded-md p-4 bg-muted">
+                    <p className="whitespace-pre-wrap">{selectedRequest.message}</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

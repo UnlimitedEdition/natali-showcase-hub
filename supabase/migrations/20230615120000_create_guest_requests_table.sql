@@ -24,7 +24,7 @@ alter table guest_requests enable row level security;
 create policy "Enable read access for admins"
 on guest_requests for select
 to authenticated
-using ( exists (select 1 from profiles where profiles.user_id = auth.uid() and profiles.role = 'admin') );
+using (is_admin(auth.uid()));
 
 create policy "Enable insert access for everyone"
 on guest_requests for insert
